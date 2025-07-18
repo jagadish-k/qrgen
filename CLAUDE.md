@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Chrome Extension (Manifest V3) for generating QR codes with embedded images. The extension opens as a full-page tab (similar to JSONView) when clicked, providing a spacious and user-friendly interface. It supports multiple QR code types: plain text, URLs, Wi-Fi network configuration, and contact cards (vCard format).
+This is a Chrome Extension (Manifest V3) for generating **colorful QR codes with embedded images**. The extension opens as a full-page tab (similar to JSONView) when clicked, providing a spacious and user-friendly interface. It supports multiple QR code types: plain text, URLs, Wi-Fi network configuration, and contact cards (vCard format).
 
 ## Technology Stack
 
 - **Frontend:** React with TypeScript
-- **UI Library:** shadcn/ui (components self-contained within main React component)
+- **Build System:** Vite with React plugin
+- **Styling:** Tailwind CSS with PostCSS
 - **QR Code Generation:** qrious library
-- **Styling:** Tailwind CSS (loaded via CDN)
+- **Color Analysis:** colorthief library for extracting dominant colors from images
 - **Extension:** Chrome Extension Manifest V3
 
 ## Architecture
@@ -19,24 +20,31 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 ### Core Files Structure
 - `manifest.json` - Chrome extension manifest (V3) with tabs permission
 - `background.js` - Service worker that opens new tab when extension clicked
-- `index.html` - Full-page tab entry point with gradient background
-- `App.tsx` - Main React component with responsive grid layout
-- `index.tsx` - React rendering entry point
-- `icons/` - Extension icons (16px, 48px, 128px)
+- `index.html` - Full-page tab entry point (minimal, processed by Vite)
+- `src/App.tsx` - Main React component with color analysis and QR generation
+- `src/index.tsx` - React rendering entry point
+- `src/index.css` - Tailwind CSS imports and custom styles
+- `src/types/colorthief.d.ts` - TypeScript type definitions for colorthief
+- `vite.config.ts` - Vite configuration for Chrome extension build
+- `tailwind.config.js` - Tailwind CSS configuration
+- `postcss.config.js` - PostCSS configuration
 
 ### Key Features Implementation
 - **QR Code Types:** Plain text, URLs, Wi-Fi networks, contact cards (vCard)
-- **Image Embedding:** Center-embedded images with 20% size ratio and white background
+- **Image Embedding:** Center-embedded images with 20% size ratio and colored background
+- **Color Analysis:** Extracts dominant colors from uploaded images using colorthief
+- **Colorful QR Codes:** Uses extracted colors for QR code foreground, background, and image border
 - **Error Correction:** High level ('H') for scanability with embedded images
 - **Download:** PNG format export functionality (400x400px)
-- **UI:** Full-page responsive design with gradient background and two-column layout
+- **UI:** Full-page responsive design with Tailwind CSS styling
 - **UX:** Similar to JSONView extension - opens in new tab instead of popup
 
 ## Development Commands
 
 ### Building the Extension
 - `npm install` - Install dependencies
-- `npm run build` - Build the extension (compiles TypeScript, bundles code, copies assets to build/)
+- `npm run build` - Build the extension using Vite (compiles TypeScript, bundles React, processes Tailwind CSS)
+- `npm run dev` - Watch mode for development
 - `npm run clean` - Remove build directory
 - `npm run typecheck` - Run TypeScript type checking
 - `npm run lint` - Run ESLint with auto-fix
@@ -51,32 +59,46 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 
 ## Technical Constraints
 
-- **Client-side only:** All QR generation and image processing must happen in the browser
-- **Self-contained components:** shadcn/ui components and utilities included directly in App.tsx
-- **No native dialogs:** Use custom toast system instead of alert()/confirm()
+- **Client-side only:** All QR generation, image processing, and color analysis happen in the browser
+- **Proper bundling:** Uses Vite for modern bundling with TypeScript and React
+- **No native dialogs:** Uses custom toast system instead of alert()/confirm()
 - **Type safety:** All code must be TypeScript with proper typing
-- **Responsive design:** Must adapt to Chrome extension popup dimensions
+- **Responsive design:** Must adapt to full-page tab dimensions
 
 ## Key Dependencies
 
 - `qrious` - QR code generation library
-- Tailwind CSS - Styling (via CDN)
-- React + TypeScript - UI framework
+- `colorthief` - Color analysis and extraction from images
+- `react` + `react-dom` - UI framework
+- `@vitejs/plugin-react` - Vite React plugin
+- `tailwindcss` - Utility-first CSS framework
+- `typescript` - Type checking
 
-## UI Components Required
+## Color Analysis Features
 
-From shadcn/ui (to be embedded in App.tsx):
-- Button
-- Input
-- Label
-- Select
-- Textarea
-- Toast (custom implementation)
-- cn utility function
+The extension uses the colorthief library to extract dominant colors from uploaded images:
+
+1. **Color Extraction:** Extracts 3 dominant colors from uploaded images
+2. **Color Mapping:** Maps colors to:
+   - Primary: QR code foreground color
+   - Secondary: Image border color
+   - Background: QR code background color
+3. **Color Preview:** Shows extracted colors in the UI
+4. **Colorful QR Codes:** Applies extracted colors to generate vibrant QR codes
 
 ## QR Code Specifications
 
 - **Error correction level:** 'H' (High) for image embedding
 - **Image embedding:** 20% of total QR code size
-- **Image background:** White background for contrast
+- **Image background:** Uses extracted background color with border
 - **Output format:** PNG for download
+- **Color customization:** Dynamic colors based on image analysis
+
+## Build System
+
+The project uses Vite for modern bundling:
+- TypeScript compilation
+- React JSX transformation
+- Tailwind CSS processing
+- Chrome extension manifest and background script copying
+- Asset optimization and hashing

@@ -1,1 +1,0 @@
-// Tailwind CSS classes will be handled inline

@@ -4,13 +4,9 @@
   "description": "Chrome extension for generating QR codes with embedded images",
   "main": "index.js",
   "scripts": {
-    "dev": "echo 'Run npm run build first, then load unpacked extension from chrome://extensions/ using the build/ folder'",
-    "build": "npm run clean && npm run download-deps && npm run compile && npm run copy-assets",
+    "dev": "vite build --watch",
+    "build": "npm run clean && npm run create-icons && vite build",
     "clean": "rm -rf build",
-    "download-deps": "node scripts/download-deps.js",
-    "compile": "npm run bundle",
-    "bundle": "node scripts/bundle.js",
-    "copy-assets": "cp manifest.json build/ && cp index.html build/ && cp background.js build/ && cp -r vendor build/ && npm run create-icons",
     "create-icons": "node scripts/create-icons.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",
@@ -28,18 +24,25 @@
   "dependencies": {
     "qrious": "^4.0.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "colorthief": "^2.4.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
     "canvas": "^2.11.2",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.32.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "postcss": "^8.4.24",
     "prettier": "^3.0.0",
-    "typescript": "^5.0.0"
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.3.0"
   }
 }
