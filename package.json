@@ -1,0 +1,38 @@
+{
+  "name": "qr-code-generator-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension for generating QR codes with embedded images",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Load unpacked extension from chrome://extensions/'",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "test": "echo 'No tests configured yet'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "qr-code",
+    "react",
+    "typescript"
+  ],
+  "author": "Jagadish K. <79893101+jagadish-k@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "qrious": "^4.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.32.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
