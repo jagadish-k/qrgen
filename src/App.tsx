@@ -1,6 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import QRious from 'qrious'
 import ColorThief from 'colorthief'
+import { 
+  FiEdit3, FiGlobe, FiPhone, FiMessageSquare, FiMail, 
+  FiVideo, FiMessageCircle, FiMapPin, FiWifi, FiCalendar, 
+  FiUser, FiCreditCard 
+} from 'react-icons/fi'
+import { IconType } from 'react-icons'
 
 interface WiFiData {
   ssid: string
@@ -56,8 +62,9 @@ interface QRTypeCard {
   type: QRCodeType
   title: string
   description: string
-  icon: string
-  color: string
+  icon: IconType
+  hoverColor: string
+  glowColor: string
   examples?: string[]
 }
 
@@ -83,96 +90,108 @@ const QR_TYPE_CARDS: QRTypeCard[] = [
     type: 'text',
     title: 'Plain Text',
     description: 'Share any text content',
-    icon: '📝',
-    color: 'bg-blue-500',
+    icon: FiEdit3,
+    hoverColor: 'hover:border-blue-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]',
     examples: ['Messages', 'Notes', 'Quotes']
   },
   {
     type: 'url',
     title: 'Website URL',
     description: 'Link to websites or web pages',
-    icon: '🌐',
-    color: 'bg-green-500',
+    icon: FiGlobe,
+    hoverColor: 'hover:border-green-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]',
     examples: ['https://example.com', 'Social media links']
   },
   {
     type: 'phone',
     title: 'Phone Number',
     description: 'Direct phone call link',
-    icon: '📞',
-    color: 'bg-red-500',
+    icon: FiPhone,
+    hoverColor: 'hover:border-red-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]',
     examples: ['+1234567890', 'Business numbers']
   },
   {
     type: 'sms',
     title: 'SMS Message',
     description: 'Pre-filled text message',
-    icon: '💬',
-    color: 'bg-purple-500',
+    icon: FiMessageSquare,
+    hoverColor: 'hover:border-purple-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]',
     examples: ['Contact info requests', 'Quick messages']
   },
   {
     type: 'email',
     title: 'Email',
     description: 'Pre-composed email with subject',
-    icon: '📧',
-    color: 'bg-orange-500',
+    icon: FiMail,
+    hoverColor: 'hover:border-orange-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.3)]',
     examples: ['Contact forms', 'Support emails']
   },
   {
     type: 'whatsapp',
     title: 'WhatsApp',
     description: 'Direct WhatsApp message',
-    icon: '📲',
-    color: 'bg-green-600',
+    icon: FiMessageCircle,
+    hoverColor: 'hover:border-green-500',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]',
     examples: ['Customer support', 'Quick chat']
   },
   {
     type: 'location',
     title: 'Location',
     description: 'GPS coordinates or Maps link',
-    icon: '📍',
-    color: 'bg-cyan-500',
+    icon: FiMapPin,
+    hoverColor: 'hover:border-cyan-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]',
     examples: ['Meeting points', 'Business address']
   },
   {
     type: 'wifi',
     title: 'WiFi Network',
     description: 'Instant WiFi connection',
-    icon: '📶',
-    color: 'bg-indigo-500',
+    icon: FiWifi,
+    hoverColor: 'hover:border-indigo-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]',
     examples: ['Guest networks', 'Office WiFi']
   },
   {
     type: 'event',
     title: 'Calendar Event',
     description: 'Add events to calendar',
-    icon: '📅',
-    color: 'bg-pink-500',
+    icon: FiCalendar,
+    hoverColor: 'hover:border-pink-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]',
     examples: ['Meetings', 'Appointments', 'Reminders']
   },
   {
     type: 'vcard',
     title: 'Contact Card',
     description: 'Complete contact information',
-    icon: '👤',
-    color: 'bg-yellow-600',
+    icon: FiUser,
+    hoverColor: 'hover:border-yellow-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]',
     examples: ['Business cards', 'Personal contacts']
   },
   {
     type: 'upi',
     title: 'UPI Payment',
     description: 'Indian digital payments',
-    icon: '💳',
-    color: 'bg-emerald-600',
+    icon: FiCreditCard,
+    hoverColor: 'hover:border-emerald-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]',
     examples: ['Business payments', 'Personal transfers']
   },
   {
     type: 'facetime',
     title: 'FaceTime',
     description: 'Apple FaceTime video call',
-    icon: '📱',
-    color: 'bg-gray-600',
+    icon: FiVideo,
+    hoverColor: 'hover:border-gray-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(107,114,128,0.3)]',
     examples: ['Video meetings', 'Family calls']
   }
 ]
@@ -199,6 +218,8 @@ const App: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'generate' | 'result'>('select')
   const [selectedQRType, setSelectedQRType] = useState<QRCodeType | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [tooltip, setTooltip] = useState<{ text: string, x: number, y: number, show: boolean }>({ text: '', x: 0, y: 0, show: false })
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -207,6 +228,45 @@ const App: React.FC = () => {
   const showToast = useCallback((message: string, type: Toast['type']) => {
     setToast({ message, type, show: true })
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000)
+  }, [])
+
+  // Dark mode toggle function
+  const toggleDarkMode = useCallback(() => {
+    const newMode = !isDarkMode
+    setIsDarkMode(newMode)
+    if (newMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('darkMode', String(newMode))
+  }, [isDarkMode])
+
+  // Initialize dark mode from localStorage or system preference
+  useEffect(() => {
+    const savedMode = localStorage.getItem('darkMode')
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const shouldUseDark = savedMode ? savedMode === 'true' : systemPrefersDark
+    
+    setIsDarkMode(shouldUseDark)
+    if (shouldUseDark) {
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  // Tooltip handlers
+  const showTooltip = useCallback((text: string, event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    setTooltip({
+      text,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10,
+      show: true
+    })
+  }, [])
+
+  const hideTooltip = useCallback(() => {
+    setTooltip(prev => ({ ...prev, show: false }))
   }, [])
 
   const extractColorsFromImage = useCallback(async (imageUrl: string): Promise<ColorPalette> => {
@@ -793,10 +853,10 @@ const App: React.FC = () => {
       case 'text':
         return (
           <div className="space-y-4">
-            <label className="form-label" htmlFor="text-input">Text Content</label>
+            <label className="neu-label" htmlFor="text-input">Text Content</label>
             <textarea
               id="text-input"
-              className="form-input min-h-[100px] resize-none"
+              className="neu-input min-h-[100px] resize-none"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="Enter text to encode in QR code"
@@ -806,11 +866,11 @@ const App: React.FC = () => {
       case 'url':
         return (
           <div className="space-y-4">
-            <label className="form-label" htmlFor="url-input">URL</label>
+            <label className="neu-label" htmlFor="url-input">URL</label>
             <input
               id="url-input"
               type="url"
-              className="form-input"
+              className="neu-input"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://example.com"
@@ -821,31 +881,31 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="wifi-ssid">Network Name (SSID)</label>
+              <label className="neu-label" htmlFor="wifi-ssid">Network Name (SSID)</label>
               <input
                 id="wifi-ssid"
-                className="form-input"
+                className="neu-input"
                 value={wifiData.ssid}
                 onChange={(e) => setWifiData({ ...wifiData, ssid: e.target.value })}
                 placeholder="WiFi network name"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="wifi-password">Password</label>
+              <label className="neu-label" htmlFor="wifi-password">Password</label>
               <input
                 id="wifi-password"
                 type="password"
-                className="form-input"
+                className="neu-input"
                 value={wifiData.password}
                 onChange={(e) => setWifiData({ ...wifiData, password: e.target.value })}
                 placeholder="WiFi password (optional)"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="wifi-encryption">Encryption</label>
+              <label className="neu-label" htmlFor="wifi-encryption">Encryption</label>
               <select
                 id="wifi-encryption"
-                className="form-input"
+                className="neu-input"
                 value={wifiData.encryption}
                 onChange={(e) => setWifiData({ ...wifiData, encryption: e.target.value as WiFiData['encryption'] })}
               >
@@ -860,13 +920,13 @@ const App: React.FC = () => {
       case 'facetime':
         return (
           <div className="space-y-4">
-            <label className="form-label" htmlFor="phone-input">
+            <label className="neu-label" htmlFor="phone-input">
               {qrType === 'facetime' ? 'FaceTime Number' : 'Phone Number'}
             </label>
             <input
               id="phone-input"
               type="tel"
-              className="form-input"
+              className="neu-input"
               value={phoneInput}
               onChange={(e) => setPhoneInput(e.target.value)}
               placeholder="+1234567890"
@@ -878,25 +938,25 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="sms-number">
+              <label className="neu-label" htmlFor="sms-number">
                 {qrType === 'whatsapp' ? 'WhatsApp Number' : 'Phone Number'}
               </label>
               <input
                 id="sms-number"
                 type="tel"
-                className="form-input"
+                className="neu-input"
                 value={smsData.number}
                 onChange={(e) => setSmsData({ ...smsData, number: e.target.value })}
                 placeholder="+1234567890"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="sms-message">
+              <label className="neu-label" htmlFor="sms-message">
                 {qrType === 'whatsapp' ? 'WhatsApp Message (Optional)' : 'SMS Message (Optional)'}
               </label>
               <textarea
                 id="sms-message"
-                className="form-input min-h-[80px] resize-none"
+                className="neu-input min-h-[80px] resize-none"
                 value={smsData.message}
                 onChange={(e) => setSmsData({ ...smsData, message: e.target.value })}
                 placeholder="Enter your message here..."
@@ -908,31 +968,31 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="email-address">Email Address</label>
+              <label className="neu-label" htmlFor="email-address">Email Address</label>
               <input
                 id="email-address"
                 type="email"
-                className="form-input"
+                className="neu-input"
                 value={emailData.email}
                 onChange={(e) => setEmailData({ ...emailData, email: e.target.value })}
                 placeholder="email@example.com"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="email-subject">Subject (Optional)</label>
+              <label className="neu-label" htmlFor="email-subject">Subject (Optional)</label>
               <input
                 id="email-subject"
-                className="form-input"
+                className="neu-input"
                 value={emailData.subject}
                 onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
                 placeholder="Email subject"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="email-body">Message (Optional)</label>
+              <label className="neu-label" htmlFor="email-body">Message (Optional)</label>
               <textarea
                 id="email-body"
-                className="form-input min-h-[100px] resize-none"
+                className="neu-input min-h-[100px] resize-none"
                 value={emailData.body}
                 onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
                 placeholder="Email message content..."
@@ -945,12 +1005,12 @@ const App: React.FC = () => {
           <div className="space-y-4">
             {/* Google Maps URL Input */}
             <div>
-              <label className="form-label" htmlFor="maps-url">Google Maps URL (Paste to auto-fill)</label>
+              <label className="neu-label" htmlFor="maps-url">Google Maps URL (Paste to auto-fill)</label>
               <div className="flex space-x-2">
                 <input
                   id="maps-url"
                   type="url"
-                  className="form-input flex-1"
+                  className="neu-input flex-1"
                   placeholder="https://maps.google.com/..."
                   onPaste={(e) => {
                     setTimeout(async () => {
@@ -979,24 +1039,24 @@ const App: React.FC = () => {
             {/* Manual Coordinates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="form-label" htmlFor="location-lat">Latitude</label>
+                <label className="neu-label" htmlFor="location-lat">Latitude</label>
                 <input
                   id="location-lat"
                   type="number"
                   step="any"
-                  className="form-input"
+                  className="neu-input"
                   value={locationData.latitude}
                   onChange={(e) => setLocationData({ ...locationData, latitude: e.target.value })}
                   placeholder="40.7128"
                 />
               </div>
               <div>
-                <label className="form-label" htmlFor="location-lng">Longitude</label>
+                <label className="neu-label" htmlFor="location-lng">Longitude</label>
                 <input
                   id="location-lng"
                   type="number"
                   step="any"
-                  className="form-input"
+                  className="neu-input"
                   value={locationData.longitude}
                   onChange={(e) => setLocationData({ ...locationData, longitude: e.target.value })}
                   placeholder="-74.0060"
@@ -1005,10 +1065,10 @@ const App: React.FC = () => {
             </div>
             
             <div>
-              <label className="form-label" htmlFor="location-label">Location Label (Optional)</label>
+              <label className="neu-label" htmlFor="location-label">Location Label (Optional)</label>
               <input
                 id="location-label"
-                className="form-input"
+                className="neu-input"
                 value={locationData.label || ''}
                 onChange={(e) => setLocationData({ ...locationData, label: e.target.value })}
                 placeholder="My Location"
@@ -1017,7 +1077,7 @@ const App: React.FC = () => {
             
             {/* QR Code Type Selection */}
             <div>
-              <label className="form-label">QR Code Format</label>
+              <label className="neu-label">QR Code Format</label>
               <div className="space-y-2">
                 <label className="flex items-center space-x-2">
                   <input
@@ -1048,50 +1108,50 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="event-title">Event Title</label>
+              <label className="neu-label" htmlFor="event-title">Event Title</label>
               <input
                 id="event-title"
-                className="form-input"
+                className="neu-input"
                 value={eventData.title}
                 onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
                 placeholder="Meeting with team"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="event-start">Start Date & Time</label>
+              <label className="neu-label" htmlFor="event-start">Start Date & Time</label>
               <input
                 id="event-start"
                 type="datetime-local"
-                className="form-input"
+                className="neu-input"
                 value={eventData.startDate}
                 onChange={(e) => setEventData({ ...eventData, startDate: e.target.value })}
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="event-end">End Date & Time (Optional)</label>
+              <label className="neu-label" htmlFor="event-end">End Date & Time (Optional)</label>
               <input
                 id="event-end"
                 type="datetime-local"
-                className="form-input"
+                className="neu-input"
                 value={eventData.endDate || ''}
                 onChange={(e) => setEventData({ ...eventData, endDate: e.target.value })}
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="event-description">Description (Optional)</label>
+              <label className="neu-label" htmlFor="event-description">Description (Optional)</label>
               <textarea
                 id="event-description"
-                className="form-input min-h-[80px] resize-none"
+                className="neu-input min-h-[80px] resize-none"
                 value={eventData.description || ''}
                 onChange={(e) => setEventData({ ...eventData, description: e.target.value })}
                 placeholder="Event description..."
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="event-location">Location (Optional)</label>
+              <label className="neu-label" htmlFor="event-location">Location (Optional)</label>
               <input
                 id="event-location"
-                className="form-input"
+                className="neu-input"
                 value={eventData.location || ''}
                 onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
                 placeholder="Conference Room A"
@@ -1103,63 +1163,63 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="vcard-name">Full Name</label>
+              <label className="neu-label" htmlFor="vcard-name">Full Name</label>
               <input
                 id="vcard-name"
-                className="form-input"
+                className="neu-input"
                 value={contactData.name}
                 onChange={(e) => setContactData({ ...contactData, name: e.target.value })}
                 placeholder="John Doe"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="vcard-phone">Phone (Optional)</label>
+              <label className="neu-label" htmlFor="vcard-phone">Phone (Optional)</label>
               <input
                 id="vcard-phone"
                 type="tel"
-                className="form-input"
+                className="neu-input"
                 value={contactData.phone}
                 onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
                 placeholder="+1234567890"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="vcard-email">Email (Optional)</label>
+              <label className="neu-label" htmlFor="vcard-email">Email (Optional)</label>
               <input
                 id="vcard-email"
                 type="email"
-                className="form-input"
+                className="neu-input"
                 value={contactData.email}
                 onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
                 placeholder="john@example.com"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="vcard-org">Organization (Optional)</label>
+              <label className="neu-label" htmlFor="vcard-org">Organization (Optional)</label>
               <input
                 id="vcard-org"
-                className="form-input"
+                className="neu-input"
                 value={contactData.organization || ''}
                 onChange={(e) => setContactData({ ...contactData, organization: e.target.value })}
                 placeholder="Company Name"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="vcard-url">Website (Optional)</label>
+              <label className="neu-label" htmlFor="vcard-url">Website (Optional)</label>
               <input
                 id="vcard-url"
                 type="url"
-                className="form-input"
+                className="neu-input"
                 value={contactData.url || ''}
                 onChange={(e) => setContactData({ ...contactData, url: e.target.value })}
                 placeholder="https://example.com"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="vcard-address">Address (Optional)</label>
+              <label className="neu-label" htmlFor="vcard-address">Address (Optional)</label>
               <textarea
                 id="vcard-address"
-                className="form-input min-h-[80px] resize-none"
+                className="neu-input min-h-[80px] resize-none"
                 value={contactData.address || ''}
                 onChange={(e) => setContactData({ ...contactData, address: e.target.value })}
                 placeholder="123 Main St, City, State, ZIP"
@@ -1171,42 +1231,42 @@ const App: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="form-label" htmlFor="upi-pa">UPI ID / VPA</label>
+              <label className="neu-label" htmlFor="upi-pa">UPI ID / VPA</label>
               <input
                 id="upi-pa"
-                className="form-input"
+                className="neu-input"
                 value={upiData.pa}
                 onChange={(e) => setUpiData({ ...upiData, pa: e.target.value })}
                 placeholder="user@paytm"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="upi-pn">Payee Name</label>
+              <label className="neu-label" htmlFor="upi-pn">Payee Name</label>
               <input
                 id="upi-pn"
-                className="form-input"
+                className="neu-input"
                 value={upiData.pn}
                 onChange={(e) => setUpiData({ ...upiData, pn: e.target.value })}
                 placeholder="John Doe"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="upi-am">Amount (Optional)</label>
+              <label className="neu-label" htmlFor="upi-am">Amount (Optional)</label>
               <input
                 id="upi-am"
                 type="number"
                 step="0.01"
-                className="form-input"
+                className="neu-input"
                 value={upiData.am || ''}
                 onChange={(e) => setUpiData({ ...upiData, am: e.target.value })}
                 placeholder="500.00"
               />
             </div>
             <div>
-              <label className="form-label" htmlFor="upi-tn">Transaction Note (Optional)</label>
+              <label className="neu-label" htmlFor="upi-tn">Transaction Note (Optional)</label>
               <input
                 id="upi-tn"
-                className="form-input"
+                className="neu-input"
                 value={upiData.tn || ''}
                 onChange={(e) => setUpiData({ ...upiData, tn: e.target.value })}
                 placeholder="Payment for services"
@@ -1215,20 +1275,20 @@ const App: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="form-label" htmlFor="upi-mc">Merchant Code (Optional)</label>
+                <label className="neu-label" htmlFor="upi-mc">Merchant Code (Optional)</label>
                 <input
                   id="upi-mc"
-                  className="form-input"
+                  className="neu-input"
                   value={upiData.mc || ''}
                   onChange={(e) => setUpiData({ ...upiData, mc: e.target.value })}
                   placeholder="1234"
                 />
               </div>
               <div>
-                <label className="form-label" htmlFor="upi-tr">Transaction Ref (Optional)</label>
+                <label className="neu-label" htmlFor="upi-tr">Transaction Ref (Optional)</label>
                 <input
                   id="upi-tr"
-                  className="form-input"
+                  className="neu-input"
                   value={upiData.tr || ''}
                   onChange={(e) => setUpiData({ ...upiData, tr: e.target.value })}
                   placeholder="TXN123456"
@@ -1244,35 +1304,56 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 relative">
+      {/* Dark Mode Toggle */}
+      <button
+        onClick={toggleDarkMode}
+        className="theme-toggle text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+        aria-label="Toggle dark mode"
+      >
+        {isDarkMode ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        )}
+      </button>
+
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">QR Code Generator</h1>
-          <p className="text-gray-600">Generate colorful QR codes with embedded images using extracted color palettes</p>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-300">QR Code Generator</h1>
+          <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">Generate colorful QR codes with embedded images using extracted color palettes</p>
         </div>
 
         {/* QR Type Selection Cards */}
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Choose QR Code Type</h2>
+          <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-6 text-center transition-colors duration-300">Choose QR Code Type</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {QR_TYPE_CARDS.map((card) => (
-              <div
-                key={card.type}
-                onClick={() => selectQRType(card.type)}
-                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200 hover:border-blue-300"
-              >
-                <div className={`${card.color} text-white p-4 rounded-t-xl`}>
-                  <div className="text-3xl mb-2 text-center">{card.icon}</div>
-                  <h3 className="text-lg font-semibold text-center">{card.title}</h3>
-                </div>
-                <div className="p-4">
-                  <p className="text-gray-600 text-sm mb-3">{card.description}</p>
+            {QR_TYPE_CARDS.map((card) => {
+              const IconComponent = card.icon
+              return (
+                <div
+                  key={card.type}
+                  onClick={() => selectQRType(card.type)}
+                  onMouseEnter={(e) => showTooltip(card.description, e)}
+                  onMouseLeave={hideTooltip}
+                  className={`qr-type-card qr-card-${card.type} relative`}
+                >
+                  <div className="text-center relative z-10">
+                    <div className="qr-icon-embedded">
+                      <IconComponent />
+                    </div>
+                    <h3 className="qr-title-elevated">{card.title}</h3>
+                  </div>
                   {card.examples && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Examples:</p>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="mt-4 relative z-10">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-300">Examples:</p>
+                      <div className="flex flex-wrap gap-1 justify-center">
                         {card.examples.slice(0, 2).map((example, index) => (
-                          <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          <span key={index} className="text-xs bg-neu-light dark:bg-neu-dark-light text-gray-600 dark:text-gray-300 px-2 py-1 rounded transition-colors duration-300">
                             {example}
                           </span>
                         ))}
@@ -1280,21 +1361,21 @@ const App: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
         {/* Step 2: Form Section */}
         {currentStep === 'form' && selectedQRType && (
-          <div id="qr-form-section" className="mt-12 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-              <h2 className="text-3xl font-bold text-gray-900">
+          <div id="qr-form-section" className="mt-12 neu-card">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">
                 {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
               </h2>
               <button
                 onClick={() => goToStep('select')}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 type="button"
               >
                 ×
@@ -1307,14 +1388,14 @@ const App: React.FC = () => {
               {/* Gradient Selection */}
               {!embeddedImage && currentGradient && (
                 <div>
-                  <label className="form-label">Gradient Themes</label>
-                  <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                  <label className="neu-label">Gradient Themes</label>
+                  <div className="bg-neu-light dark:bg-neu-dark-light p-6 rounded-xl space-y-4 transition-colors duration-300">
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <span className="font-medium text-sm">Current: {currentGradient.name}</span>
+                        <span className="font-medium text-sm text-gray-700 dark:text-gray-300 transition-colors duration-300">Current: {currentGradient.name}</span>
                         <button
                           onClick={generateRandomGradient}
-                          className="text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-2 rounded transition-colors"
+                          className="neu-button text-sm"
                         >
                           Random
                         </button>
@@ -1358,7 +1439,7 @@ const App: React.FC = () => {
               
               {/* Image Upload */}
               <div>
-                <label className="form-label">Embed Image & Extract Colors (Optional)</label>
+                <label className="neu-label">Embed Image & Extract Colors (Optional)</label>
                 <p className="text-sm text-gray-600 mb-3">
                   {embeddedImage 
                     ? 'Image uploaded! Colors extracted for QR code customization.' 
@@ -1370,7 +1451,7 @@ const App: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="form-input"
+                  className="neu-input"
                 />
                 {embeddedImage && (
                   <div className="mt-6 space-y-4">
@@ -1426,7 +1507,7 @@ const App: React.FC = () => {
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => goToStep('select')}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="neu-button"
                 >
                   ← Back
                 </button>
@@ -1436,7 +1517,7 @@ const App: React.FC = () => {
                     goToStep('result')
                   }}
                   disabled={isGenerating}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1 disabled:opacity-50"
+                  className="neu-button-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGenerating ? 'Generating...' : 'Generate QR Code'}
                 </button>
@@ -1448,14 +1529,14 @@ const App: React.FC = () => {
 
         {/* Step 3: Result Section */}
         {currentStep === 'result' && qrCodeDataUrl && (
-          <div id="qr-result-section" className="mt-12 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-              <h2 className="text-3xl font-bold text-gray-900">
+          <div id="qr-result-section" className="mt-12 neu-card">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">
                 Your {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
               </h2>
               <button
                 onClick={() => goToStep('select')}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 type="button"
               >
                 ×
@@ -1465,14 +1546,14 @@ const App: React.FC = () => {
             <div className="space-y-8">
               {/* QR Code Display */}
               <div className="text-center">
-                <div className="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                <div className="neu-card bg-neu-base dark:bg-neu-dark-base p-6 inline-block">
                   <img 
                     src={qrCodeDataUrl} 
                     alt="Generated QR Code" 
-                    className="max-w-full h-auto"
+                    className="max-w-full h-auto rounded-lg"
                   />
                 </div>
-                <p className="text-sm text-gray-600 mt-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 transition-colors duration-300">
                   {extractedColors ? 'Colorful QR code with extracted colors' : 
                    currentGradient ? `QR code with ${currentGradient.name} gradient` : 
                    'QR code generated successfully'}
@@ -1483,20 +1564,20 @@ const App: React.FC = () => {
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => goToStep('form')}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="neu-button"
                 >
                   ← Edit
                 </button>
                 <button
                   onClick={downloadQRCode}
                   disabled={!qrCodeDataUrl}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1 disabled:opacity-50"
+                  className="neu-button-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   📥 Download QR Code
                 </button>
                 <button
                   onClick={() => goToStep('select')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="neu-button-primary"
                 >
                   🔄 New QR Code
                 </button>
@@ -1511,14 +1592,28 @@ const App: React.FC = () => {
 
       {/* Toast notification */}
       {toast.show && (
-        <div className={`toast toast-${toast.type} animate-fade-in`}>
+        <div className={`neu-toast neu-toast-${toast.type} animate-fade-in`}>
           <span>{toast.message}</span>
           <button 
             onClick={() => setToast(prev => ({ ...prev, show: false }))}
-            className="ml-2 text-lg font-bold hover:opacity-70"
+            className="ml-2 text-lg font-bold hover:opacity-70 transition-opacity duration-200"
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* Tooltip */}
+      {tooltip.show && (
+        <div 
+          className="tooltip"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+            opacity: tooltip.show ? 1 : 0
+          }}
+        >
+          {tooltip.text}
         </div>
       )}
     </div>
