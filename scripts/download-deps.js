@@ -11,20 +11,16 @@ if (!fs.existsSync(vendorDir)) {
 // Dependencies to download
 const dependencies = [
   {
-    url: 'https://unpkg.com/react@18/umd/react.development.js',
+    url: 'https://unpkg.com/react@18.3.1/umd/react.development.js',
     filename: 'react.js'
   },
   {
-    url: 'https://unpkg.com/react-dom@18/umd/react-dom.development.js',
+    url: 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
     filename: 'react-dom.js'
   },
   {
     url: 'https://unpkg.com/qrious@4.0.2/dist/qrious.min.js',
     filename: 'qrious.js'
-  },
-  {
-    url: 'https://cdn.tailwindcss.com',
-    filename: 'tailwind.js'
   }
 ];
 
@@ -57,6 +53,12 @@ async function downloadAll() {
     for (const dep of dependencies) {
       await downloadFile(dep.url, dep.filename);
     }
+    
+    // Create empty tailwind.js file (we'll use inline styles)
+    const tailwindPath = path.join(vendorDir, 'tailwind.js');
+    fs.writeFileSync(tailwindPath, '// Tailwind CSS classes will be handled inline');
+    console.log('Created empty tailwind.js');
+    
     console.log('All dependencies downloaded successfully!');
   } catch (error) {
     console.error('Error downloading dependencies:', error);
