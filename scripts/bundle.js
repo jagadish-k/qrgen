@@ -1,20 +1,429 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read the compiled JS files
-const indexJs = fs.readFileSync(path.join(__dirname, '../build/index.js'), 'utf8');
-const appJs = fs.readFileSync(path.join(__dirname, '../build/App.js'), 'utf8');
+// Ensure build directory exists
+const buildDir = path.join(__dirname, '../build');
+if (!fs.existsSync(buildDir)) {
+  fs.mkdirSync(buildDir, { recursive: true });
+}
 
-// Create a bundled version that doesn't rely on ES modules
+// Create a simple bundled version that works in the browser
 const bundledJs = `
-// React and ReactDOM from CDN will be available as global variables
-const { React, ReactDOM } = window;
-
-// App component
-${appJs.replace('export default App;', 'window.App = App;')}
-
-// Index logic
-${indexJs.replace('import App from \'./App\';', '').replace('import React from \'react\';', '').replace('import { createRoot } from \'react-dom/client\';', '')}
+// Simple browser-compatible bundle
+(function() {
+  // React and ReactDOM are available as global variables
+  const { React, ReactDOM } = window;
+  
+  // App component (inline)
+  const App = function() {
+    const { useState, useRef } = React;
+    
+    // Utility function for className concatenation
+    const cn = (...classes) => {
+      return classes.filter(Boolean).join(' ');
+    };
+    
+    // shadcn/ui Button component
+    const Button = ({ className, variant = 'default', size = 'md', ...props }) => {
+      const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+      
+      const variants = {
+        default: 'bg-blue-600 text-white hover:bg-blue-700',
+        outline: 'border border-gray-300 bg-white hover:bg-gray-50',
+        secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+      };
+      
+      const sizes = {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4 py-2',
+        lg: 'h-12 px-8'
+      };
+      
+      return React.createElement('button', {
+        className: cn(baseStyles, variants[variant], sizes[size], className),
+        ...props
+      });
+    };
+    
+    // shadcn/ui Input component
+    const Input = ({ className, ...props }) => {
+      return React.createElement('input', {
+        className: cn(
+          'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        ),
+        ...props
+      });
+    };
+    
+    // shadcn/ui Label component
+    const Label = ({ className, ...props }) => {
+      return React.createElement('label', {
+        className: cn(
+          'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+          className
+        ),
+        ...props
+      });
+    };
+    
+    // shadcn/ui Select component
+    const Select = ({ className, ...props }) => {
+      return React.createElement('select', {
+        className: cn(
+          'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        ),
+        ...props
+      });
+    };
+    
+    // shadcn/ui Textarea component
+    const Textarea = ({ className, ...props }) => {
+      return React.createElement('textarea', {
+        className: cn(
+          'flex min-h-[60px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        ),
+        ...props
+      });
+    };
+    
+    // Toast component
+    const Toast = ({ message, type, onClose }) => {
+      const typeStyles = {
+        success: 'bg-green-50 text-green-800 border-green-200',
+        error: 'bg-red-50 text-red-800 border-red-200',
+        info: 'bg-blue-50 text-blue-800 border-blue-200'
+      };
+      
+      React.useEffect(() => {
+        const timer = setTimeout(() => {
+          onClose();
+        }, 3000);
+        return () => clearTimeout(timer);
+      }, [onClose]);
+      
+      return React.createElement('div', {
+        className: cn('fixed top-4 right-4 p-4 rounded-md border z-50', typeStyles[type])
+      }, React.createElement('div', {
+        className: 'flex items-center justify-between'
+      }, React.createElement('span', null, message), React.createElement('button', {
+        onClick: onClose,
+        className: 'ml-2 text-lg font-bold hover:opacity-70'
+      }, '×')));
+    };
+    
+    // State
+    const [qrType, setQrType] = useState('text');
+    const [textInput, setTextInput] = useState('');
+    const [urlInput, setUrlInput] = useState('');
+    const [wifiData, setWifiData] = useState({ ssid: '', password: '', encryption: 'WPA' });
+    const [contactData, setContactData] = useState({ name: '', phone: '', email: '' });
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
+    const [embeddedImage, setEmbeddedImage] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: 'info', show: false });
+    
+    const canvasRef = useRef(null);
+    const fileInputRef = useRef(null);
+    
+    const showToast = (message, type) => {
+      setToast({ message, type, show: true });
+    };
+    
+    const hideToast = () => {
+      setToast(prev => ({ ...prev, show: false }));
+    };
+    
+    const generateQRData = () => {
+      switch (qrType) {
+        case 'text':
+          return textInput;
+        case 'url':
+          return urlInput;
+        case 'wifi':
+          return \`WIFI:T:\${wifiData.encryption};S:\${wifiData.ssid};P:\${wifiData.password};;\`;
+        case 'contact':
+          return \`BEGIN:VCARD\\nVERSION:3.0\\nFN:\${contactData.name}\\nTEL:\${contactData.phone}\\nEMAIL:\${contactData.email}\\nEND:VCARD\`;
+        default:
+          return '';
+      }
+    };
+    
+    const validateInput = () => {
+      switch (qrType) {
+        case 'text':
+          if (!textInput.trim()) {
+            showToast('Please enter text to generate QR code', 'error');
+            return false;
+          }
+          break;
+        case 'url':
+          if (!urlInput.trim()) {
+            showToast('Please enter a URL to generate QR code', 'error');
+            return false;
+          }
+          try {
+            new URL(urlInput);
+          } catch {
+            showToast('Please enter a valid URL', 'error');
+            return false;
+          }
+          break;
+        case 'wifi':
+          if (!wifiData.ssid.trim()) {
+            showToast('Please enter WiFi network name (SSID)', 'error');
+            return false;
+          }
+          break;
+        case 'contact':
+          if (!contactData.name.trim() && !contactData.phone.trim() && !contactData.email.trim()) {
+            showToast('Please enter at least one contact field', 'error');
+            return false;
+          }
+          break;
+      }
+      return true;
+    };
+    
+    const generateQRCode = () => {
+      if (!validateInput()) return;
+      
+      const qrData = generateQRData();
+      const canvas = canvasRef.current;
+      
+      if (!canvas) return;
+      
+      try {
+        const qr = new window.QRious({
+          element: canvas,
+          value: qrData,
+          size: 400,
+          level: 'H'
+        });
+        
+        if (embeddedImage) {
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          
+          img.onload = () => {
+            const imageSize = canvas.width * 0.2;
+            const x = (canvas.width - imageSize) / 2;
+            const y = (canvas.height - imageSize) / 2;
+            
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, imageSize / 2 + 10, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            ctx.drawImage(img, x, y, imageSize, imageSize);
+            
+            setQrCodeDataUrl(canvas.toDataURL('image/png'));
+          };
+          
+          img.src = embeddedImage;
+        } else {
+          setQrCodeDataUrl(canvas.toDataURL('image/png'));
+        }
+        
+        showToast('QR code generated successfully!', 'success');
+      } catch (error) {
+        showToast('Error generating QR code', 'error');
+      }
+    };
+    
+    const handleImageUpload = (event) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setEmbeddedImage(e.target?.result);
+          showToast('Image uploaded successfully!', 'success');
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    
+    const downloadQRCode = () => {
+      if (!qrCodeDataUrl) {
+        showToast('Please generate a QR code first', 'error');
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.download = \`qr-code-\${Date.now()}.png\`;
+      link.href = qrCodeDataUrl;
+      link.click();
+      
+      showToast('QR code downloaded!', 'success');
+    };
+    
+    const renderInputFields = () => {
+      switch (qrType) {
+        case 'text':
+          return React.createElement('div', { className: 'space-y-2' }, 
+            React.createElement(Label, { htmlFor: 'text-input' }, 'Text'),
+            React.createElement(Textarea, {
+              id: 'text-input',
+              value: textInput,
+              onChange: (e) => setTextInput(e.target.value),
+              placeholder: 'Enter text to encode in QR code'
+            })
+          );
+        case 'url':
+          return React.createElement('div', { className: 'space-y-2' }, 
+            React.createElement(Label, { htmlFor: 'url-input' }, 'URL'),
+            React.createElement(Input, {
+              id: 'url-input',
+              type: 'url',
+              value: urlInput,
+              onChange: (e) => setUrlInput(e.target.value),
+              placeholder: 'https://example.com'
+            })
+          );
+        case 'wifi':
+          return React.createElement('div', { className: 'space-y-4' }, 
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'wifi-ssid' }, 'Network Name (SSID)'),
+              React.createElement(Input, {
+                id: 'wifi-ssid',
+                value: wifiData.ssid,
+                onChange: (e) => setWifiData({ ...wifiData, ssid: e.target.value }),
+                placeholder: 'WiFi network name'
+              })
+            ),
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'wifi-password' }, 'Password'),
+              React.createElement(Input, {
+                id: 'wifi-password',
+                type: 'password',
+                value: wifiData.password,
+                onChange: (e) => setWifiData({ ...wifiData, password: e.target.value }),
+                placeholder: 'WiFi password (optional)'
+              })
+            ),
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'wifi-encryption' }, 'Encryption'),
+              React.createElement(Select, {
+                id: 'wifi-encryption',
+                value: wifiData.encryption,
+                onChange: (e) => setWifiData({ ...wifiData, encryption: e.target.value })
+              }, 
+                React.createElement('option', { value: 'WPA' }, 'WPA/WPA2'),
+                React.createElement('option', { value: 'WEP' }, 'WEP'),
+                React.createElement('option', { value: 'nopass' }, 'No Encryption')
+              )
+            )
+          );
+        case 'contact':
+          return React.createElement('div', { className: 'space-y-4' }, 
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'contact-name' }, 'Name'),
+              React.createElement(Input, {
+                id: 'contact-name',
+                value: contactData.name,
+                onChange: (e) => setContactData({ ...contactData, name: e.target.value }),
+                placeholder: 'Full name'
+              })
+            ),
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'contact-phone' }, 'Phone'),
+              React.createElement(Input, {
+                id: 'contact-phone',
+                type: 'tel',
+                value: contactData.phone,
+                onChange: (e) => setContactData({ ...contactData, phone: e.target.value }),
+                placeholder: 'Phone number'
+              })
+            ),
+            React.createElement('div', { className: 'space-y-2' }, 
+              React.createElement(Label, { htmlFor: 'contact-email' }, 'Email'),
+              React.createElement(Input, {
+                id: 'contact-email',
+                type: 'email',
+                value: contactData.email,
+                onChange: (e) => setContactData({ ...contactData, email: e.target.value }),
+                placeholder: 'Email address'
+              })
+            )
+          );
+        default:
+          return null;
+      }
+    };
+    
+    return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6' }, 
+      React.createElement('div', { className: 'max-w-6xl mx-auto' }, 
+        React.createElement('div', { className: 'text-center mb-8' }, 
+          React.createElement('h1', { className: 'text-4xl font-bold text-white mb-2' }, 'QR Code Generator'),
+          React.createElement('p', { className: 'text-white/80 text-lg' }, 'Generate QR codes with embedded images for text, URLs, Wi-Fi networks, and contact cards')
+        ),
+        React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-8' }, 
+          React.createElement('div', { className: 'bg-white rounded-2xl shadow-2xl p-8' }, 
+            React.createElement('div', { className: 'space-y-6' }, 
+              React.createElement('div', { className: 'space-y-2' }, 
+                React.createElement(Label, { htmlFor: 'qr-type', className: 'text-lg font-semibold' }, 'QR Code Type'),
+                React.createElement(Select, {
+                  id: 'qr-type',
+                  value: qrType,
+                  onChange: (e) => setQrType(e.target.value),
+                  className: 'text-lg'
+                }, 
+                  React.createElement('option', { value: 'text' }, 'Plain Text'),
+                  React.createElement('option', { value: 'url' }, 'URL'),
+                  React.createElement('option', { value: 'wifi' }, 'WiFi Network'),
+                  React.createElement('option', { value: 'contact' }, 'Contact Card')
+                )
+              ),
+              renderInputFields(),
+              React.createElement('div', { className: 'space-y-2' }, 
+                React.createElement(Label, { htmlFor: 'image-upload', className: 'text-lg font-semibold' }, 'Embed Image (Optional)'),
+                React.createElement('input', {
+                  ref: fileInputRef,
+                  type: 'file',
+                  accept: 'image/*',
+                  onChange: handleImageUpload,
+                  className: 'w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                }),
+                embeddedImage && React.createElement('div', { className: 'mt-3' }, 
+                  React.createElement('img', { src: embeddedImage, alt: 'Embedded', className: 'w-20 h-20 object-cover rounded-lg border-2 border-gray-200' })
+                )
+              ),
+              React.createElement('div', { className: 'flex gap-4' }, 
+                React.createElement(Button, { onClick: generateQRCode, className: 'flex-1 py-3 text-lg' }, 'Generate QR Code'),
+                React.createElement(Button, { onClick: downloadQRCode, variant: 'outline', disabled: !qrCodeDataUrl, className: 'py-3 px-6 text-lg' }, 'Download')
+              )
+            )
+          ),
+          React.createElement('div', { className: 'bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center' }, 
+            qrCodeDataUrl ? React.createElement('div', { className: 'text-center' }, 
+              React.createElement('h3', { className: 'text-xl font-semibold mb-4 text-gray-800' }, 'Generated QR Code'),
+              React.createElement('div', { className: 'bg-gray-50 p-6 rounded-xl' }, 
+                React.createElement('img', { src: qrCodeDataUrl, alt: 'Generated QR Code', className: 'mx-auto max-w-full h-auto', style: { maxWidth: '400px' } })
+              ),
+              React.createElement('p', { className: 'mt-4 text-sm text-gray-600' }, 'Click download to save as PNG')
+            ) : React.createElement('div', { className: 'text-center text-gray-500' }, 
+              React.createElement('div', { className: 'w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center mb-4 mx-auto' }, 
+                React.createElement('svg', { className: 'w-16 h-16 text-gray-400', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, 
+                  React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M12 4v16m8-8H4' })
+                )
+              ),
+              React.createElement('h3', { className: 'text-xl font-semibold mb-2' }, 'No QR Code Generated'),
+              React.createElement('p', { className: 'text-gray-600' }, 'Fill in the form and click "Generate QR Code" to create your QR code')
+            )
+          )
+        ),
+        React.createElement('canvas', { ref: canvasRef, width: 400, height: 400, className: 'hidden' })
+      ),
+      toast.show && React.createElement(Toast, { message: toast.message, type: toast.type, onClose: hideToast })
+    );
+  };
+  
+  // Render the app
+  const container = document.getElementById('root');
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(App));
+})();
 `;
 
 // Write the bundled JS
