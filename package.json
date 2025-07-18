@@ -9,7 +9,7 @@
     "clean": "rm -rf build",
     "compile": "tsc && npm run bundle",
     "bundle": "node scripts/bundle.js",
-    "copy-assets": "cp manifest.json build/ && cp index.html build/ && npm run create-icons",
+    "copy-assets": "cp manifest.json build/ && cp index.html build/ && cp background.js build/ && npm run create-icons",
     "create-icons": "node scripts/create-icons.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",

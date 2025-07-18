@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Chrome Extension (Manifest V3) for generating QR codes with embedded images. The extension supports multiple QR code types: plain text, URLs, Wi-Fi network configuration, and contact cards (vCard format).
+This is a Chrome Extension (Manifest V3) for generating QR codes with embedded images. The extension opens as a full-page tab (similar to JSONView) when clicked, providing a spacious and user-friendly interface. It supports multiple QR code types: plain text, URLs, Wi-Fi network configuration, and contact cards (vCard format).
 
 ## Technology Stack
 
@@ -17,9 +17,10 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 ## Architecture
 
 ### Core Files Structure
-- `manifest.json` - Chrome extension manifest (V3)
-- `index.html` - Extension popup entry point
-- `App.tsx` - Main React component containing all UI logic
+- `manifest.json` - Chrome extension manifest (V3) with tabs permission
+- `background.js` - Service worker that opens new tab when extension clicked
+- `index.html` - Full-page tab entry point with gradient background
+- `App.tsx` - Main React component with responsive grid layout
 - `index.tsx` - React rendering entry point
 - `icons/` - Extension icons (16px, 48px, 128px)
 
@@ -27,8 +28,9 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 - **QR Code Types:** Plain text, URLs, Wi-Fi networks, contact cards (vCard)
 - **Image Embedding:** Center-embedded images with 20% size ratio and white background
 - **Error Correction:** High level ('H') for scanability with embedded images
-- **Download:** PNG format export functionality
-- **UI:** Responsive design within Chrome extension popup constraints
+- **Download:** PNG format export functionality (400x400px)
+- **UI:** Full-page responsive design with gradient background and two-column layout
+- **UX:** Similar to JSONView extension - opens in new tab instead of popup
 
 ## Development Commands
 
@@ -45,6 +47,7 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode"
 4. Click "Load unpacked" and select the `build/` directory
+5. Click the QR Code Generator extension icon in the toolbar to open in a new tab
 
 ## Technical Constraints
 

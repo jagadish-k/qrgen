@@ -243,7 +243,7 @@ const App: React.FC = () => {
       const qr = new window.QRious({
         element: canvas,
         value: qrData,
-        size: 300,
+        size: 400,
         level: 'H' // High error correction for image embedding
       });
 
@@ -409,61 +409,90 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto bg-white min-h-screen">
-      <h1 className="text-2xl font-bold text-center mb-6">QR Code Generator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">QR Code Generator</h1>
+          <p className="text-white/80 text-lg">Generate QR codes with embedded images for text, URLs, Wi-Fi networks, and contact cards</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Panel - Controls */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
       
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="qr-type">QR Code Type</Label>
-          <Select
-            id="qr-type"
-            value={qrType}
-            onChange={(e) => setQrType(e.target.value as QRCodeType)}
-          >
-            <option value="text">Plain Text</option>
-            <option value="url">URL</option>
-            <option value="wifi">WiFi Network</option>
-            <option value="contact">Contact Card</option>
-          </Select>
-        </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="qr-type" className="text-lg font-semibold">QR Code Type</Label>
+                <Select
+                  id="qr-type"
+                  value={qrType}
+                  onChange={(e) => setQrType(e.target.value as QRCodeType)}
+                  className="text-lg"
+                >
+                  <option value="text">Plain Text</option>
+                  <option value="url">URL</option>
+                  <option value="wifi">WiFi Network</option>
+                  <option value="contact">Contact Card</option>
+                </Select>
+              </div>
 
-        {renderInputFields()}
+              {renderInputFields()}
 
-        <div className="space-y-2">
-          <Label htmlFor="image-upload">Embed Image (Optional)</Label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          {embeddedImage && (
-            <div className="mt-2">
-              <img src={embeddedImage} alt="Embedded" className="w-16 h-16 object-cover rounded" />
+              <div className="space-y-2">
+                <Label htmlFor="image-upload" className="text-lg font-semibold">Embed Image (Optional)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {embeddedImage && (
+                  <div className="mt-3">
+                    <img src={embeddedImage} alt="Embedded" className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <Button onClick={generateQRCode} className="flex-1 py-3 text-lg">
+                  Generate QR Code
+                </Button>
+                <Button onClick={downloadQRCode} variant="outline" disabled={!qrCodeDataUrl} className="py-3 px-6 text-lg">
+                  Download
+                </Button>
+              </div>
             </div>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={generateQRCode} className="flex-1">
-            Generate QR Code
-          </Button>
-          <Button onClick={downloadQRCode} variant="outline" disabled={!qrCodeDataUrl}>
-            Download
-          </Button>
-        </div>
-
-        {qrCodeDataUrl && (
-          <div className="text-center">
-            <img src={qrCodeDataUrl} alt="Generated QR Code" className="mx-auto border rounded" />
           </div>
-        )}
+          
+          {/* Right Panel - QR Code Display */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center">
+            {qrCodeDataUrl ? (
+              <div className="text-center">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800">Generated QR Code</h3>
+                <div className="bg-gray-50 p-6 rounded-xl">
+                  <img src={qrCodeDataUrl} alt="Generated QR Code" className="mx-auto max-w-full h-auto" style={{maxWidth: '400px'}} />
+                </div>
+                <p className="mt-4 text-sm text-gray-600">Click download to save as PNG</p>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                <div className="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No QR Code Generated</h3>
+                <p className="text-gray-600">Fill in the form and click "Generate QR Code" to create your QR code</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <canvas
           ref={canvasRef}
-          width={300}
-          height={300}
+          width={400}
+          height={400}
           className="hidden"
         />
       </div>
