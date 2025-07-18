@@ -197,7 +197,7 @@ const App: React.FC = () => {
   const [gradientOptions, setGradientOptions] = useState<Gradient[]>([])
   const [toast, setToast] = useState<Toast>({ message: '', type: 'info', show: false })
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'generate' | 'result'>('select')
   const [selectedQRType, setSelectedQRType] = useState<QRCodeType | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -420,44 +420,69 @@ const App: React.FC = () => {
     }
   }, [parseGoogleMapsUrl, showToast])
 
-  // Modal handling functions
-  const openModal = useCallback((type: QRCodeType) => {
+  // Step navigation functions
+  const selectQRType = useCallback((type: QRCodeType) => {
     setSelectedQRType(type)
     setQrType(type)
-    setShowModal(true)
+    setCurrentStep('form')
+    // Reset QR code when selecting new type
+    setQrCodeDataUrl(null)
+    // Scroll to form section after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const formElement = document.getElementById('qr-form-section')
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }, [])
 
-  const closeModal = useCallback(() => {
-    setShowModal(false)
-    setSelectedQRType(null)
+  const goToStep = useCallback((step: 'select' | 'form' | 'generate' | 'result') => {
+    setCurrentStep(step)
+    if (step === 'select') {
+      setSelectedQRType(null)
+      setQrCodeDataUrl(null)
+      // Scroll back to top
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (step === 'form') {
+      setTimeout(() => {
+        const formElement = document.getElementById('qr-form-section')
+        if (formElement) {
+          formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    } else if (step === 'result') {
+      setTimeout(() => {
+        const resultElement = document.getElementById('qr-result-section')
+        if (resultElement) {
+          resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
   }, [])
+
 
   // Load gradients on component mount
   useEffect(() => {
     fetchGradients()
   }, [fetchGradients])
 
-  // Handle modal keyboard events
+  // Handle wizard keyboard events
   useEffect(() => {
-    if (showModal) {
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden'
-      
-      // Handle Escape key to close modal
+    if (currentStep !== 'select') {
+      // Handle Escape key to go back to selection
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          closeModal()
+          goToStep('select')
         }
       }
       
       document.addEventListener('keydown', handleEscape)
       
       return () => {
-        document.body.style.overflow = 'unset'
         document.removeEventListener('keydown', handleEscape)
       }
     }
-  }, [showModal, closeModal])
+  }, [currentStep, goToStep])
 
   const generateQRData = useCallback((): string => {
     switch (qrType) {
@@ -703,6 +728,14 @@ const App: React.FC = () => {
                      currentGradient ? `QR code generated with ${currentGradient.name} gradient!` : 
                      'QR code generated successfully!'
       showToast(message, 'success')
+      // Auto-advance to result step and scroll to QR code
+      setCurrentStep('result')
+      setTimeout(() => {
+        const resultElement = document.getElementById('step-result')
+        if (resultElement) {
+          resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     } catch (error) {
       console.error('Error generating QR code:', error)
       showToast('Error generating QR code', 'error')
@@ -755,7 +788,7 @@ const App: React.FC = () => {
     showToast('QR code downloaded!', 'success')
   }, [qrCodeDataUrl, showToast])
 
-  const renderInputFields = () => {
+  const renderInputFields = useCallback(() => {
     switch (qrType) {
       case 'text':
         return (
@@ -1207,48 +1240,8 @@ const App: React.FC = () => {
       default:
         return null
     }
-  }
+  }, [qrType, textInput, urlInput, wifiData, phoneInput, smsData, emailData, locationData, eventData, contactData, upiData, handleMapsUrlInput])
 
-  // Modal Component
-  const Modal = ({ children, onClose }: { children: React.ReactNode, onClose: () => void }) => {
-    // Prevent modal from closing when clicking inside the modal content
-    const handleModalClick = (e: React.MouseEvent) => {
-      e.stopPropagation()
-    }
-
-    // Close modal when clicking on backdrop
-    const handleBackdropClick = () => {
-      onClose()
-    }
-
-    return (
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-        onClick={handleBackdropClick}
-      >
-        <div 
-          className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={handleModalClick}
-        >
-          <div className="flex justify-between items-center p-6 border-b">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {selectedQRType && QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-              type="button"
-            >
-              ×
-            </button>
-          </div>
-          <div className="p-6">
-            {children}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen p-6">
@@ -1258,78 +1251,89 @@ const App: React.FC = () => {
           <p className="text-gray-600">Generate colorful QR codes with embedded images using extracted color palettes</p>
         </div>
 
-        {!showModal && (
-          /* QR Type Selection Cards */
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Choose QR Code Type</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {QR_TYPE_CARDS.map((card) => (
-                <div
-                  key={card.type}
-                  onClick={() => openModal(card.type)}
-                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200 hover:border-blue-300"
-                >
-                  <div className={`${card.color} text-white p-4 rounded-t-xl`}>
-                    <div className="text-3xl mb-2 text-center">{card.icon}</div>
-                    <h3 className="text-lg font-semibold text-center">{card.title}</h3>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-gray-600 text-sm mb-3">{card.description}</p>
-                    {card.examples && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Examples:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {card.examples.slice(0, 2).map((example, index) => (
-                            <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              {example}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+        {/* QR Type Selection Cards */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Choose QR Code Type</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {QR_TYPE_CARDS.map((card) => (
+              <div
+                key={card.type}
+                onClick={() => selectQRType(card.type)}
+                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200 hover:border-blue-300"
+              >
+                <div className={`${card.color} text-white p-4 rounded-t-xl`}>
+                  <div className="text-3xl mb-2 text-center">{card.icon}</div>
+                  <h3 className="text-lg font-semibold text-center">{card.title}</h3>
                 </div>
-              ))}
-            </div>
+                <div className="p-4">
+                  <p className="text-gray-600 text-sm mb-3">{card.description}</p>
+                  {card.examples && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Examples:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {card.examples.slice(0, 2).map((example, index) => (
+                          <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            {example}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Modal for QR Code Form */}
-        {showModal && selectedQRType && (
-          <Modal onClose={closeModal}>
-            <div className="space-y-6">
+        {/* Step 2: Form Section */}
+        {currentStep === 'form' && selectedQRType && (
+          <div id="qr-form-section" className="mt-12 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-3xl font-bold text-gray-900">
+                {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
+              </h2>
+              <button
+                onClick={() => goToStep('select')}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-8">
               {renderInputFields()}
               
               {/* Gradient Selection */}
               {!embeddedImage && currentGradient && (
                 <div>
                   <label className="form-label">Gradient Themes</label>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                  <div className="bg-gray-50 p-6 rounded-lg space-y-4">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <span className="font-medium text-sm">Current: {currentGradient.name}</span>
                         <button
                           onClick={generateRandomGradient}
-                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded transition-colors"
+                          className="text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-2 rounded transition-colors"
                         >
                           Random
                         </button>
                       </div>
                       <div 
-                        className="h-6 rounded border-2 border-gray-300" 
+                        className="h-8 rounded border-2 border-gray-300" 
                         style={{ 
                           background: `linear-gradient(135deg, ${currentGradient.colors.join(', ')})` 
                         }}
                       />
                     </div>
                     <div>
-                      <p className="text-sm font-medium mb-2">Choose a gradient:</p>
-                      <div className="grid grid-cols-1 gap-2">
+                      <p className="text-sm font-medium mb-3">Choose a gradient:</p>
+                      <div className="grid grid-cols-1 gap-3">
                         {gradientOptions.map((gradient, index) => (
                           <button
                             key={index}
                             onClick={() => selectGradient(gradient)}
-                            className={`p-2 rounded-lg border-2 transition-all hover:border-blue-400 ${
+                            className={`p-3 rounded-lg border-2 transition-all hover:border-blue-400 ${
                               currentGradient.name === gradient.name 
                                 ? 'border-blue-500 bg-blue-50' 
                                 : 'border-gray-200 hover:bg-gray-100'
@@ -1337,7 +1341,7 @@ const App: React.FC = () => {
                           >
                             <div className="flex items-center space-x-3">
                               <div 
-                                className="w-8 h-8 rounded border border-gray-300 flex-shrink-0" 
+                                className="w-10 h-10 rounded border border-gray-300 flex-shrink-0" 
                                 style={{ 
                                   background: `linear-gradient(135deg, ${gradient.colors.join(', ')})` 
                                 }}
@@ -1355,7 +1359,7 @@ const App: React.FC = () => {
               {/* Image Upload */}
               <div>
                 <label className="form-label">Embed Image & Extract Colors (Optional)</label>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 mb-3">
                   {embeddedImage 
                     ? 'Image uploaded! Colors extracted for QR code customization.' 
                     : 'Upload an image to extract colors, or use gradients for colorful QR codes'
@@ -1369,16 +1373,16 @@ const App: React.FC = () => {
                   className="form-input"
                 />
                 {embeddedImage && (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex justify-center items-start space-x-4">
+                  <div className="mt-6 space-y-4">
+                    <div className="flex justify-center items-start space-x-6">
                       <img 
                         src={embeddedImage} 
                         alt="Embedded" 
-                        className="w-32 h-32 object-cover rounded-lg border-2 border-gray-300"
+                        className="w-40 h-40 object-cover rounded-lg border-2 border-gray-300"
                       />
                       <button
                         onClick={removeImage}
-                        className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-1"
+                        className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-3 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1387,29 +1391,29 @@ const App: React.FC = () => {
                       </button>
                     </div>
                     {extractedColors && (
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-semibold mb-2">Extracted Colors:</h4>
-                        <div className="flex space-x-4">
+                      <div className="bg-gray-50 p-6 rounded-lg">
+                        <h4 className="font-semibold mb-3">Extracted Colors:</h4>
+                        <div className="flex space-x-6">
                           <div className="text-center">
                             <div 
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 mx-auto"
+                              className="w-12 h-12 rounded-full border-2 border-gray-300 mx-auto"
                               style={{ backgroundColor: extractedColors.primary }}
                             />
-                            <p className="text-xs mt-1">Primary</p>
+                            <p className="text-sm mt-2">Primary</p>
                           </div>
                           <div className="text-center">
                             <div 
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 mx-auto"
+                              className="w-12 h-12 rounded-full border-2 border-gray-300 mx-auto"
                               style={{ backgroundColor: extractedColors.secondary }}
                             />
-                            <p className="text-xs mt-1">Secondary</p>
+                            <p className="text-sm mt-2">Secondary</p>
                           </div>
                           <div className="text-center">
                             <div 
-                              className="w-8 h-8 rounded-full border-2 border-gray-300 mx-auto"
+                              className="w-12 h-12 rounded-full border-2 border-gray-300 mx-auto"
                               style={{ backgroundColor: extractedColors.background }}
                             />
-                            <p className="text-xs mt-1">Background</p>
+                            <p className="text-sm mt-2">Background</p>
                           </div>
                         </div>
                       </div>
@@ -1419,49 +1423,86 @@ const App: React.FC = () => {
               </div>
               
               {/* Action Buttons */}
-              <div className="flex space-x-4">
+              <div className="flex space-x-4 pt-4">
                 <button
-                  onClick={generateColorfulQRCode}
+                  onClick={() => goToStep('select')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => {
+                    generateColorfulQRCode()
+                    goToStep('result')
+                  }}
                   disabled={isGenerating}
-                  className="button-primary flex-1 disabled:opacity-50"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1 disabled:opacity-50"
                 >
                   {isGenerating ? 'Generating...' : 'Generate QR Code'}
+                </button>
+              </div>
+              
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Result Section */}
+        {currentStep === 'result' && qrCodeDataUrl && (
+          <div id="qr-result-section" className="mt-12 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-3xl font-bold text-gray-900">
+                Your {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
+              </h2>
+              <button
+                onClick={() => goToStep('select')}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-8">
+              {/* QR Code Display */}
+              <div className="text-center">
+                <div className="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="Generated QR Code" 
+                    className="max-w-full h-auto"
+                  />
+                </div>
+                <p className="text-sm text-gray-600 mt-4">
+                  {extractedColors ? 'Colorful QR code with extracted colors' : 
+                   currentGradient ? `QR code with ${currentGradient.name} gradient` : 
+                   'QR code generated successfully'}
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-4 pt-4">
+                <button
+                  onClick={() => goToStep('form')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                >
+                  ← Edit
                 </button>
                 <button
                   onClick={downloadQRCode}
                   disabled={!qrCodeDataUrl}
-                  className="button-secondary disabled:opacity-50"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1 disabled:opacity-50"
                 >
-                  Download
+                  📥 Download QR Code
                 </button>
                 <button
-                  onClick={closeModal}
-                  className="button-secondary"
+                  onClick={() => goToStep('select')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
                 >
-                  Back
+                  🔄 New QR Code
                 </button>
               </div>
-              
-              {/* QR Code Display */}
-              {qrCodeDataUrl && (
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-4">Generated QR Code</h3>
-                  <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
-                    <img 
-                      src={qrCodeDataUrl} 
-                      alt="Generated QR Code" 
-                      className="max-w-full h-auto"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600 mt-4">
-                    {extractedColors ? 'Colorful QR code with extracted colors' : 
-                     currentGradient ? `QR code with ${currentGradient.name} gradient` : 
-                     'QR code generated successfully'}
-                  </p>
-                </div>
-              )}
             </div>
-          </Modal>
+          </div>
         )}
       </div>
 
