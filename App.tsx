@@ -1,4 +1,7 @@
-import React, { useState, useRef } from 'react';
+// @ts-nocheck
+// React is loaded via CDN
+const { React } = window;
+const { useState, useRef } = React;
 
 // Utility function for className concatenation
 const cn = (...classes: (string | undefined | null | boolean)[]) => {
@@ -237,8 +240,7 @@ const App: React.FC = () => {
     if (!canvas) return;
 
     try {
-      // @ts-ignore - QRious is loaded via CDN
-      const qr = new QRious({
+      const qr = new window.QRious({
         element: canvas,
         value: qrData,
         size: 300,

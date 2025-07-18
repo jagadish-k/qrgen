@@ -32,12 +32,19 @@ This is a Chrome Extension (Manifest V3) for generating QR codes with embedded i
 
 ## Development Commands
 
-Since this is a new project, you'll need to set up the basic Chrome extension structure first. The extension doesn't require a build process - it uses CDN resources and can be loaded directly as an unpacked extension.
+### Building the Extension
+- `npm install` - Install dependencies
+- `npm run build` - Build the extension (compiles TypeScript, bundles code, copies assets to build/)
+- `npm run clean` - Remove build directory
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run lint` - Run ESLint with auto-fix
+- `npm run format` - Format code with Prettier
 
 ### Loading the Extension
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" and select this directory
+1. Run `npm run build` to create the build directory
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode"
+4. Click "Load unpacked" and select the `build/` directory
 
 ## Technical Constraints
 
