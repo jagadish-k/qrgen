@@ -47,7 +47,10 @@ A powerful Chrome extension for generating beautiful, colorful QR codes with emb
 
 ## 🛠️ Installation
 
-### For Users
+### From Chrome Web Store
+[Install QR Gen](https://chrome.google.com/webstore/detail/YOUR_EXTENSION_ID) (Coming Soon)
+
+### Manual Installation (Development)
 
 1. **Download the Extension**
    - Clone this repository or download the ZIP file
@@ -86,12 +89,35 @@ npm run dev
 # Build for production
 npm run build
 
-# Type checking
-npm run typecheck
+# Publishing scripts
+npm run prepare-release     # Interactive release preparation
+npm run build:zip          # Build and create extension zip
+npm run validate:extension # Run all checks and build
 
-# Lint and format code
+# Code quality
+npm run typecheck
 npm run lint
 npm run format
+```
+
+## 🚀 Publishing
+
+### Automatic Publishing (GitHub Actions)
+1. Set up Chrome Web Store API credentials (see `scripts/setup-store-api.md`)
+2. Configure GitHub secrets:
+   - `CHROME_EXTENSION_ID`
+   - `CHROME_CLIENT_ID`
+   - `CHROME_CLIENT_SECRET`
+   - `CHROME_REFRESH_TOKEN`
+3. Create a release or use workflow dispatch in GitHub Actions
+
+### Manual Publishing
+```bash
+# Prepare a new release
+npm run prepare-release
+
+# Or build and zip manually
+npm run build:zip
 ```
 
 ## 🏗️ Technical Architecture

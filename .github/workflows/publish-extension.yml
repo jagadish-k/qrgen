@@ -1,0 +1,120 @@
+name: Publish Chrome Extension
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests (if any)
+      run: npm test --if-present
+      
+    - name: Build extension
+      run: npm run build
+      
+    - name: Update version in manifest
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        # Get current version from package.json
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Calculate new version based on release type
+        if [ "${{ github.event.inputs.release_type }}" = "major" ]; then
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1+1".0.0"}')
+        elif [ "${{ github.event.inputs.release_type }}" = "minor" ]; then
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1".0"}')
+        else
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+        fi
+        
+        echo "New version: $NEW_VERSION"
+        
+        # Update package.json
+        npm version $NEW_VERSION --no-git-tag-version
+        
+        # Update manifest.json in build directory
+        sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" build/manifest.json
+        
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+      
+    - name: Zip extension
+      run: |
+        cd build
+        zip -r ../extension.zip .
+        cd ..
+        
+    - name: Upload & publish extension to Chrome Web Store
+      uses: mnao305/chrome-extension-upload@v5.0.0
+      with:
+        file-path: extension.zip
+        extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+        client-id: ${{ secrets.CHROME_CLIENT_ID }}
+        client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+        refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        publish: true
+        
+    - name: Create GitHub Release (if manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ env.NEW_VERSION }}
+        release_name: Release v${{ env.NEW_VERSION }}
+        body: |
+          ## What's Changed
+          
+          Auto-generated release for version ${{ env.NEW_VERSION }}
+          
+          ### Installation
+          Install from [Chrome Web Store](https://chrome.google.com/webstore/detail/${{ secrets.CHROME_EXTENSION_ID }})
+          
+          ### Manual Installation
+          1. Download the `extension.zip` from the assets below
+          2. Extract the files
+          3. Load unpacked extension in Chrome Developer mode
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload extension zip as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chrome-extension-v${{ env.NEW_VERSION || github.event.release.tag_name }}
+        path: extension.zip
+        
+    - name: Commit version bump (if manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add package.json package-lock.json
+        git commit -m "chore: bump version to ${{ env.NEW_VERSION }}" || exit 0
+        git push

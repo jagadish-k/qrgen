@@ -10,7 +10,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
-    "test": "echo 'No tests configured yet'"
+    "test": "echo 'No tests configured yet'",
+    "prepare-release": "./scripts/prepare-release.sh",
+    "build:zip": "npm run build && cd build && zip -r ../extension.zip .",
+    "publish:manual": "npm run build:zip && echo 'Extension zip created. Upload manually to Chrome Web Store Developer Dashboard.'",
+    "validate:extension": "npm run lint && npm run typecheck && npm run build"
   },
   "keywords": [
     "chrome-extension",
