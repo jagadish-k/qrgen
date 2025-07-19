@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { FiPlus, FiDownload, FiArrowLeft } from 'react-icons/fi'
+import { FiPlus, FiDownload, FiArrowLeft, FiX, FiRefreshCw } from 'react-icons/fi'
 
 // Import types and utilities
 import { 
@@ -59,6 +59,7 @@ const App: React.FC = () => {
   // State for UI
   const [currentStep, setCurrentStep] = useState<AppStep>('select')
   const [selectedQRType, setSelectedQRType] = useState<QRCodeType | null>(null)
+  const [activeTab, setActiveTab] = useState<'gradient' | 'image'>('gradient')
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -87,7 +88,6 @@ const App: React.FC = () => {
           label: parsed.label || prev.label,
           mapsUrl: url
         }))
-        showToast('Coordinates extracted from Maps URL!', 'success')
       } else {
         showToast('Could not extract coordinates from this URL', 'error')
       }
@@ -99,13 +99,11 @@ const App: React.FC = () => {
   // Handle gradient selection with toast feedback
   const handleGradientSelect = useCallback((gradient: Gradient) => {
     const selected = selectGradient(gradient)
-    showToast(`Applied gradient: ${selected.name}`, 'success')
   }, [selectGradient, showToast])
 
   const handleRandomGradient = useCallback(() => {
     const randomGradient = generateRandomGradient()
     if (randomGradient) {
-      showToast(`Applied gradient: ${randomGradient.name}`, 'success')
     }
   }, [generateRandomGradient, showToast])
 
@@ -194,12 +192,11 @@ const App: React.FC = () => {
     setIsGenerating(true)
     const qrData = getQRData()
     
-    const message = extractedColors ? 'Colorful QR code generated successfully!' : 
-                   currentGradient ? `QR code generated with ${currentGradient.name} gradient!` : 
-                   'QR code generated successfully!'
-    showToast(message, 'success')
-    setCurrentStep('result')
-  }, [validateInput, getQRData, extractedColors, currentGradient, showToast])
+    // Stay in form step for 2-column layout, but set result step internally for generator
+    if (currentStep === 'form') {
+      setCurrentStep('result')
+    }
+  }, [validateInput, getQRData, currentStep])
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -208,11 +205,11 @@ const App: React.FC = () => {
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string
         setEmbeddedImage(imageUrl)
+        setActiveTab('image') // Switch to image tab when image is uploaded
         
         try {
           const colors = await extractColorsFromImage(imageUrl)
           setExtractedColors(colors)
-          showToast('Image uploaded and colors extracted!', 'success')
         } catch (error) {
           console.error('Error extracting colors:', error)
           showToast('Image uploaded but color extraction failed', 'error')
@@ -225,11 +222,11 @@ const App: React.FC = () => {
   const removeImage = useCallback(() => {
     setEmbeddedImage(null)
     setExtractedColors(null)
+    setActiveTab('gradient') // Switch back to gradient tab when image is removed
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-    showToast('Image removed - using gradient mode', 'success')
   }, [showToast])
 
   const downloadQRCode = useCallback(() => {
@@ -243,7 +240,6 @@ const App: React.FC = () => {
     link.href = qrCodeDataUrl
     link.click()
     
-    showToast('QR code downloaded!', 'success')
   }, [qrCodeDataUrl, showToast])
 
 
@@ -263,18 +259,22 @@ const App: React.FC = () => {
           </p>
         </div>
 
-        {/* QR Type Selection */}
-        {currentStep === 'select' && (
-          <QRTypeSelector
-            onSelectType={selectQRType}
-            onShowTooltip={showTooltip}
-            onHideTooltip={hideTooltip}
-            isDarkMode={isDarkMode}
-          />
-        )}
+        {/* Main Layout Container */}
+        <div className={`flex gap-6 transition-all duration-500 ${qrCodeDataUrl ? 'lg:flex-row flex-col-reverse' : 'flex-col'}`}>
+          {/* Left Column - Forms and Selection */}
+          <div className={`transition-all duration-500 ${qrCodeDataUrl ? 'lg:w-1/2 w-full' : 'w-full'}`}>
+            {/* QR Type Selection */}
+            {currentStep === 'select' && (
+              <QRTypeSelector
+                onSelectType={selectQRType}
+                onShowTooltip={showTooltip}
+                onHideTooltip={hideTooltip}
+                isDarkMode={isDarkMode}
+              />
+            )}
 
-        {/* Form Section */}
-        {currentStep === 'form' && selectedQRType && (
+            {/* Form Section */}
+            {(currentStep === 'form' || currentStep === 'result') && selectedQRType && (
           <div id="qr-form-section" className="mt-12 neu-card">
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
               <h2 className="text-3xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
@@ -282,10 +282,10 @@ const App: React.FC = () => {
               </h2>
               <button
                 onClick={() => goToStep('select')}
-                className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full"
                 type="button"
               >
-                ×
+                <FiX className="w-5 h-5" />
               </button>
             </div>
             
@@ -316,26 +316,71 @@ const App: React.FC = () => {
                 onMapsUrlInput={handleMapsUrlInput}
               />
               
-              {/* Gradient Selection */}
-              {!embeddedImage && currentGradient && (
-                <GradientSelector
-                  currentGradient={currentGradient}
-                  gradientOptions={gradientOptions}
-                  onSelectGradient={handleGradientSelect}
-                  onGenerateRandom={handleRandomGradient}
-                  isDarkMode={isDarkMode}
-                  selectedQRType={selectedQRType}
-                />
-              )}
-              
-              {/* Image Upload */}
-              <ImageUpload
-                embeddedImage={embeddedImage}
-                extractedColors={extractedColors}
-                onImageUpload={handleImageUpload}
-                onRemoveImage={removeImage}
-                fileInputRef={fileInputRef}
-              />
+              {/* Color & Style Options */}
+              <div className="neu-card">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="flex bg-neu-light dark:bg-neu-dark-light rounded-xl p-1">
+                    <button
+                      onClick={() => setActiveTab('gradient')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'gradient' 
+                          ? 'bg-neu-base dark:bg-neu-dark-base shadow-neu-pressed dark:shadow-neu-dark-pressed' 
+                          : 'hover:bg-neu-base dark:hover:bg-neu-dark-base'
+                      }`}
+                      style={{color: isDarkMode ? 'rgba(229, 231, 235, 0.8)' : 'rgba(55, 65, 81, 0.8)'}}
+                    >
+                      Gradient Themes
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('image')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'image' 
+                          ? 'bg-neu-base dark:bg-neu-dark-base shadow-neu-pressed dark:shadow-neu-dark-pressed' 
+                          : 'hover:bg-neu-base dark:hover:bg-neu-dark-base'
+                      }`}
+                      style={{color: isDarkMode ? 'rgba(229, 231, 235, 0.8)' : 'rgba(55, 65, 81, 0.8)'}}
+                    >
+                      Image Colors
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === 'gradient' ? (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)'}}>
+                        Choose from hundreds of beautiful gradient themes for your QR code
+                      </p>
+                    </div>
+                    {currentGradient && (
+                      <GradientSelector
+                        currentGradient={currentGradient}
+                        gradientOptions={gradientOptions}
+                        onSelectGradient={handleGradientSelect}
+                        onGenerateRandom={handleRandomGradient}
+                        isDarkMode={isDarkMode}
+                        selectedQRType={selectedQRType}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)'}}>
+                        Upload an image to extract colors automatically for your QR code
+                      </p>
+                    </div>
+                    <ImageUpload
+                      embeddedImage={embeddedImage}
+                      extractedColors={extractedColors}
+                      onImageUpload={handleImageUpload}
+                      onRemoveImage={removeImage}
+                      fileInputRef={fileInputRef}
+                    />
+                  </div>
+                )}
+              </div>
               
               {/* Action Buttons */}
               <div className="flex space-x-4 pt-4">
@@ -348,80 +393,143 @@ const App: React.FC = () => {
                 <button
                   onClick={generateQRCode}
                   disabled={isGenerating}
-                  className="neu-button-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="neu-button-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isGenerating ? 'Generating...' : 'Generate QR Code'}
+                  {isGenerating ? (
+                    'Generating...'
+                  ) : qrCodeDataUrl ? (
+                    <>
+                      <FiRefreshCw className="w-4 h-4" />
+                      Regenerate QR Code
+                    </>
+                  ) : (
+                    'Generate QR Code'
+                  )}
                 </button>
               </div>
             </div>
           </div>
-        )}
+            )}
+          </div>
 
-        {/* Step 3: Result Section */}
-        {currentStep === 'result' && qrCodeDataUrl && (
-          <div id="qr-result-section" className="mt-12 neu-card">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
-              <h2 className="text-3xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
-                Your {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
-              </h2>
-              <button
-                onClick={() => goToStep('select')}
-                className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                type="button"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="space-y-8">
-              {/* QR Code Display */}
-              <div className="text-center">
-                <div className="neu-card bg-neu-base dark:bg-neu-dark-base p-6 inline-block">
-                  <img 
-                    src={qrCodeDataUrl} 
-                    alt="Generated QR Code" 
-                    className="max-w-full h-auto rounded-lg"
-                  />
+          {/* Right Column - QR Code Display */}
+          {qrCodeDataUrl && (
+            <div className="lg:w-1/2 w-full transition-all duration-500">
+              <div className="neu-card lg:sticky lg:top-6">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+                  <h2 className="text-2xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
+                    Your QR Code
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setQrCodeDataUrl('')
+                      setCurrentStep('form')
+                    }}
+                    className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full"
+                    type="button"
+                    title="Clear QR Code"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 transition-colors duration-300">
-                  {extractedColors ? 'Colorful QR code with extracted colors' : 
-                   currentGradient ? `QR code with ${currentGradient.name} gradient` : 
-                   'QR code generated successfully'}
-                </p>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex space-x-4 pt-4">
-                <button
-                  onClick={() => goToStep('form')}
-                  className="neu-button flex items-center justify-center gap-2"
-                >
-                  <FiArrowLeft className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={downloadQRCode}
-                  disabled={!qrCodeDataUrl}
-                  className="neu-button-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <FiDownload className="w-5 h-5" />
-                  Download
-                </button>
-                <button
-                  onClick={() => goToStep('select')}
-                  className="neu-button-primary flex items-center justify-center gap-2"
-                >
-                  <FiPlus className="w-5 h-5" />
-                  New QR
-                </button>
+                
+                <div className="space-y-4">
+                  {/* QR Code and Action Panel Layout */}
+                  <div className="flex items-center gap-4">
+                    {/* QR Code Display */}
+                    <div className="flex-1 flex justify-center">
+                      <div className="neu-card bg-neu-base dark:bg-neu-dark-base p-6 w-full max-w-sm">
+                        <img 
+                          src={qrCodeDataUrl} 
+                          alt="Generated QR Code" 
+                          className="w-full h-auto rounded-lg"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Calculator-style Action Panel */}
+                    <div className="flex flex-col gap-2">
+                      {/* Download Button */}
+                      <button
+                        onClick={downloadQRCode}
+                        disabled={!qrCodeDataUrl}
+                        className="w-16 h-16 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
+                        style={{
+                          background: isDarkMode 
+                            ? 'linear-gradient(145deg, #3a3d47, #2c2f36)' 
+                            : 'linear-gradient(145deg, #ffffff, #e0e7f0)',
+                          boxShadow: isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        onMouseDown={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? 'inset 3px 3px 6px #2c2f36, inset -3px -3px 6px #3a3d47'
+                            : 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff'
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        title="Download PNG"
+                      >
+                        <FiDownload 
+                          className="w-6 h-6 transition-colors duration-200" 
+                          style={{color: isDarkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(21, 128, 61, 0.8)'}}
+                        />
+                      </button>
+
+                      {/* Create New Button */}
+                      <button
+                        onClick={() => goToStep('select')}
+                        className="w-16 h-16 rounded-xl transition-all duration-200 flex items-center justify-center group"
+                        style={{
+                          background: isDarkMode 
+                            ? 'linear-gradient(145deg, #3a3d47, #2c2f36)' 
+                            : 'linear-gradient(145deg, #ffffff, #e0e7f0)',
+                          boxShadow: isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        onMouseDown={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? 'inset 3px 3px 6px #2c2f36, inset -3px -3px 6px #3a3d47'
+                            : 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff'
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = isDarkMode
+                            ? '6px 6px 12px #2c2f36, -6px -6px 12px #3a3d47'
+                            : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
+                        }}
+                        title="Create New QR"
+                      >
+                        <FiPlus 
+                          className="w-6 h-6 transition-colors duration-200" 
+                          style={{color: isDarkMode ? 'rgba(59, 130, 246, 0.8)' : 'rgba(37, 99, 235, 0.8)'}}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* QR Code Generator Component */}
-      {currentStep === 'result' && (
+      {(currentStep === 'form' || currentStep === 'result') && (
         <QRCodeGenerator
           qrData={getQRData()}
           embeddedImage={embeddedImage}

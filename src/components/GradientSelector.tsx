@@ -192,37 +192,26 @@ export const GradientSelector: React.FC<GradientSelectorProps> = ({
     <div>
       <label className="neu-label">Gradient Themes</label>
       <div className="bg-neu-light dark:bg-neu-dark-light p-6 rounded-xl space-y-4 transition-colors duration-300">
-        {/* Current gradient display */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-medium text-sm transition-colors duration-300" style={{color: isDarkMode ? 'rgba(209, 213, 219, 0.8)' : 'rgba(55, 65, 81, 0.8)'}}>
-              Current: {currentGradient.name}
-            </span>
-            <button
-              onClick={onGenerateRandom}
-              className="neu-button text-sm"
-            >
-              Random
-            </button>
-          </div>
-          <div className="h-16 w-16 mx-auto rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-            <QRPreview gradient={currentGradient} qrData={sampleQRData} size={64} />
-          </div>
-        </div>
-
-        {/* Search field */}
-        <div>
+        {/* Search field and Random button */}
+        <div className="flex gap-3 items-center">
           <input
             type="text"
             placeholder="Search by name or color (hex, rgb, or name)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="neu-input text-sm mb-4"
+            className="neu-input text-sm flex-1"
           />
-          <p className="text-xs mb-3 transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)'}}>
-            Showing {filteredGradients.length} of {gradientOptions.length} gradients
-          </p>
+          <button
+            onClick={onGenerateRandom}
+            className="neu-button text-sm px-4 py-3 whitespace-nowrap"
+          >
+            Random
+          </button>
         </div>
+        
+        <p className="text-xs transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)'}}>
+          Showing {filteredGradients.length} of {gradientOptions.length} gradients
+        </p>
 
         {/* Gradient grid */}
         <div className="max-h-80 overflow-y-auto">
