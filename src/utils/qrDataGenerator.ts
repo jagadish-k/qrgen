@@ -76,7 +76,75 @@ export const generateQRData = (params: QRDataParams): string => {
       return `BEGIN:VEVENT\\nSUMMARY:${eventData.title}\\n${eventData.description ? `DESCRIPTION:${eventData.description}\\n` : ''}${eventData.location ? `LOCATION:${eventData.location}\\n` : ''}DTSTART:${startDate}\\nDTEND:${endDate}\\nEND:VEVENT`
 
     case 'vcard':
-      return `BEGIN:VCARD\\nVERSION:3.0\\nFN:${contactData.name}\\n${contactData.phone ? `TEL:${contactData.phone}\\n` : ''}${contactData.email ? `EMAIL:${contactData.email}\\n` : ''}${contactData.organization ? `ORG:${contactData.organization}\\n` : ''}${contactData.url ? `URL:${contactData.url}\\n` : ''}${contactData.address ? `ADR:;;${contactData.address};;;;\\n` : ''}END:VCARD`
+      // Create comprehensive vCard 3.0 format
+      const fullName = `${contactData.firstName} ${contactData.lastName}`.trim()
+      let vcard = `BEGIN:VCARD\nVERSION:3.0\n`
+      
+      // Full name and formatted name
+      vcard += `FN:${fullName}\n`
+      vcard += `N:${contactData.lastName || ''};${contactData.firstName || ''};;;\n`
+      
+      // Phone numbers
+      if (contactData.phone) {
+        vcard += `TEL;TYPE=CELL:${contactData.phone}\n`
+      }
+      if (contactData.workPhone) {
+        vcard += `TEL;TYPE=WORK:${contactData.workPhone}\n`
+      }
+      if (contactData.fax) {
+        vcard += `TEL;TYPE=FAX:${contactData.fax}\n`
+      }
+      
+      // Email
+      if (contactData.email) {
+        vcard += `EMAIL;TYPE=INTERNET:${contactData.email}\n`
+      }
+      
+      // Organization and title
+      if (contactData.organization) {
+        const orgParts = [contactData.organization]
+        if (contactData.department) {
+          orgParts.push(contactData.department)
+        }
+        vcard += `ORG:${orgParts.join(';')}\n`
+      }
+      if (contactData.jobTitle) {
+        vcard += `TITLE:${contactData.jobTitle}\n`
+      }
+      
+      // Address
+      if (contactData.street || contactData.city || contactData.state || contactData.postalCode || contactData.country) {
+        const addressParts = [
+          '', // PO Box (empty)
+          '', // Extended address (empty)
+          contactData.street || '',
+          contactData.city || '',
+          contactData.state || '',
+          contactData.postalCode || '',
+          contactData.country || ''
+        ]
+        vcard += `ADR;TYPE=HOME:${addressParts.join(';')}\n`
+      }
+      
+      // Website
+      if (contactData.website) {
+        vcard += `URL:${contactData.website}\n`
+      }
+      
+      // Birthday
+      if (contactData.birthday) {
+        // Convert YYYY-MM-DD to vCard format (YYYYMMDD)
+        const birthday = contactData.birthday.replace(/-/g, '')
+        vcard += `BDAY:${birthday}\n`
+      }
+      
+      // Notes
+      if (contactData.notes) {
+        vcard += `NOTE:${contactData.notes.replace(/\n/g, '\\n')}\n`
+      }
+      
+      vcard += `END:VCARD`
+      return vcard
 
     case 'upi':
       const upiParams = new URLSearchParams()

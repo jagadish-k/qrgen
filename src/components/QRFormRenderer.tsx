@@ -1,6 +1,6 @@
 import React from 'react'
 import { QRCodeType, WiFiData, ContactData, UPIData, EventData, LocationData } from '../types'
-import { TextForm, URLForm, PhoneForm, WiFiForm } from './forms'
+import { TextForm, URLForm, PhoneForm, WiFiForm, ContactForm } from './forms'
 
 interface QRFormRendererProps {
   qrType: QRCodeType
@@ -64,6 +64,9 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
 
     case 'wifi':
       return <WiFiForm data={wifiData} onChange={onWifiDataChange} />
+
+    case 'vcard':
+      return <ContactForm data={contactData} onChange={onContactDataChange} />
 
     case 'sms':
     case 'whatsapp':

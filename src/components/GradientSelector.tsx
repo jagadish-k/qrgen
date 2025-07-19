@@ -215,21 +215,21 @@ export const GradientSelector: React.FC<GradientSelectorProps> = ({
 
         {/* Gradient grid */}
         <div className="max-h-80 overflow-y-auto">
-          <div className="grid gap-3" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))'}}>
+          <div className="grid gap-3 p-1" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))'}}>
             {filteredGradients.map((gradient, index) => (
               <button
                 key={index}
                 onClick={() => onSelectGradient(gradient)}
                 className={`relative group transition-all duration-200 ${
                   currentGradient.name === gradient.name 
-                    ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-neu-light dark:ring-offset-neu-dark-light scale-105' 
-                    : 'hover:scale-105 hover:ring-2 hover:ring-blue-400 hover:ring-offset-1 hover:ring-offset-neu-light dark:hover:ring-offset-neu-dark-light'
+                    ? 'ring-2 ring-blue-500 scale-105' 
+                    : 'hover:scale-105 hover:ring-2 hover:ring-blue-400'
                 }`}
                 style={{ width: '64px', height: '64px' }}
                 title={gradient.name}
               >
-                <div className="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-                  <QRPreview gradient={gradient} qrData={sampleQRData} size={64} />
+                <div className="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden p-1">
+                  <QRPreview gradient={gradient} qrData={sampleQRData} size={56} />
                 </div>
                 {/* Tooltip on hover */}
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">

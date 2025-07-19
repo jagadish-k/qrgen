@@ -93,8 +93,8 @@ export const validateQRInput = (params: ValidationParams): { isValid: boolean; e
       break
 
     case 'vcard':
-      if (!contactData.name.trim() && !contactData.phone.trim() && !contactData.email.trim()) {
-        return { isValid: false, error: 'Please enter at least one contact field' }
+      if (!contactData.firstName.trim() && !contactData.lastName.trim() && !contactData.phone.trim() && !contactData.email.trim()) {
+        return { isValid: false, error: 'Please enter at least first name, last name, phone, or email' }
       }
       break
 

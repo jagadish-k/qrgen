@@ -7,12 +7,32 @@ export interface WiFiData {
 }
 
 export interface ContactData {
-  name: string
+  // Basic info
+  firstName: string
+  lastName: string
   phone: string
   email: string
+  
+  // Optional fields
   organization?: string
-  url?: string
-  address?: string
+  jobTitle?: string
+  department?: string
+  website?: string
+  
+  // Additional phone numbers
+  workPhone?: string
+  fax?: string
+  
+  // Address information
+  street?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  country?: string
+  
+  // Social/Additional
+  notes?: string
+  birthday?: string // YYYY-MM-DD format
 }
 
 export interface UPIData {
