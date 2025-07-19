@@ -4,7 +4,7 @@ import ColorThief from 'colorthief'
 import { 
   FiEdit3, FiGlobe, FiPhone, FiMessageSquare, FiMail, 
   FiVideo, FiMessageCircle, FiMapPin, FiWifi, FiCalendar, 
-  FiUser, FiCreditCard 
+  FiUser, FiCreditCard, FiPlus, FiDownload, FiArrowLeft 
 } from 'react-icons/fi'
 import { IconType } from 'react-icons'
 
@@ -1564,22 +1564,25 @@ const App: React.FC = () => {
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => goToStep('form')}
-                  className="neu-button"
+                  className="neu-button flex items-center justify-center gap-2"
                 >
-                  ← Edit
+                  <FiArrowLeft className="w-4 h-4" />
+                  Edit
                 </button>
                 <button
                   onClick={downloadQRCode}
                   disabled={!qrCodeDataUrl}
-                  className="neu-button-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="neu-button-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  📥 Download QR Code
+                  <FiDownload className="w-5 h-5" />
+                  Download
                 </button>
                 <button
                   onClick={() => goToStep('select')}
-                  className="neu-button-primary"
+                  className="neu-button-primary flex items-center justify-center gap-2"
                 >
-                  🔄 New QR Code
+                  <FiPlus className="w-5 h-5" />
+                  New QR
                 </button>
               </div>
             </div>
