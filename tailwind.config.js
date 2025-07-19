@@ -8,8 +8,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'bold': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        'heavy': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        'sans': ['Nunito Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        'bold': ['Nunito Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        'heavy': ['Nunito Sans', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontWeight: {
         'heavy': '900',
