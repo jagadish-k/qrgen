@@ -4,7 +4,8 @@ import {
   ContactData, 
   UPIData, 
   EventData, 
-  LocationData 
+  LocationData,
+  SocialMediaData 
 } from '../types'
 
 interface ValidationParams {
@@ -19,6 +20,7 @@ interface ValidationParams {
   upiData: UPIData
   eventData: EventData
   locationData: LocationData
+  socialMediaData: SocialMediaData
 }
 
 export const validateQRInput = (params: ValidationParams): { isValid: boolean; error?: string } => {
@@ -33,7 +35,8 @@ export const validateQRInput = (params: ValidationParams): { isValid: boolean; e
     contactData,
     upiData,
     eventData,
-    locationData
+    locationData,
+    socialMediaData
   } = params
 
   switch (qrType) {
@@ -101,6 +104,64 @@ export const validateQRInput = (params: ValidationParams): { isValid: boolean; e
     case 'upi':
       if (!upiData.pa.trim() || !upiData.pn.trim()) {
         return { isValid: false, error: 'Please enter UPI ID and payee name' }
+      }
+      break
+
+    case 'linkedin':
+    case 'instagram':
+    case 'snapchat':
+      if (!socialMediaData.url.trim()) {
+        return { isValid: false, error: `Please enter a valid ${qrType} URL or username` }
+      }
+      
+      const url = socialMediaData.url.trim()
+      
+      // Platform-specific validation
+      if (qrType === 'instagram') {
+        // Accept either username or full URL
+        if (!url.startsWith('http') && !url.match(/^[a-zA-Z0-9._]+$/)) {
+          return { isValid: false, error: 'Please enter a valid Instagram username or URL' }
+        }
+        if (url.startsWith('http')) {
+          try {
+            const urlObj = new URL(url)
+            if (!urlObj.hostname.includes('instagram.com')) {
+              return { isValid: false, error: 'Please enter a valid Instagram URL' }
+            }
+          } catch {
+            return { isValid: false, error: 'Please enter a valid Instagram URL' }
+          }
+        }
+      } else if (qrType === 'linkedin') {
+        // Accept either username or full URL
+        if (!url.startsWith('http') && !url.match(/^[a-zA-Z0-9-]+$/)) {
+          return { isValid: false, error: 'Please enter a valid LinkedIn username or URL' }
+        }
+        if (url.startsWith('http')) {
+          try {
+            const urlObj = new URL(url)
+            if (!urlObj.hostname.includes('linkedin.com')) {
+              return { isValid: false, error: 'Please enter a valid LinkedIn URL' }
+            }
+          } catch {
+            return { isValid: false, error: 'Please enter a valid LinkedIn URL' }
+          }
+        }
+      } else if (qrType === 'snapchat') {
+        // Accept either username or full URL
+        if (!url.startsWith('http') && !url.match(/^[a-zA-Z0-9._-]+$/)) {
+          return { isValid: false, error: 'Please enter a valid Snapchat username or URL' }
+        }
+        if (url.startsWith('http')) {
+          try {
+            const urlObj = new URL(url)
+            if (!urlObj.hostname.includes('snapchat.com')) {
+              return { isValid: false, error: 'Please enter a valid Snapchat URL' }
+            }
+          } catch {
+            return { isValid: false, error: 'Please enter a valid Snapchat URL' }
+          }
+        }
       }
       break
   }
