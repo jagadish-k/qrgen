@@ -10,3 +10,7 @@ yarn-error.log*
 .env.production.local
 dist/
 build/
+
+# Generated files
+*.css.map
+*.js.map
