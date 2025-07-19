@@ -101,6 +101,8 @@ export interface ColorPalette {
 export interface Gradient {
   name: string
   colors: string[]
+  angle?: number // For custom gradients
+  isCustom?: boolean
 }
 
 export interface Tooltip {

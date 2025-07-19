@@ -160,8 +160,21 @@ export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const data = imageData.data
           
-          // Create gradient
-          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+          // Create gradient with custom angle if available
+          const angle = currentGradient.angle || 45 // Default 45 degrees if no angle specified
+          const radians = (angle * Math.PI) / 180
+          
+          // Calculate gradient endpoints based on angle
+          const centerX = canvas.width / 2
+          const centerY = canvas.height / 2
+          const radius = Math.max(canvas.width, canvas.height) / 2
+          
+          const x1 = centerX - Math.cos(radians) * radius
+          const y1 = centerY - Math.sin(radians) * radius
+          const x2 = centerX + Math.cos(radians) * radius
+          const y2 = centerY + Math.sin(radians) * radius
+          
+          const gradient = ctx.createLinearGradient(x1, y1, x2, y2)
           currentGradient.colors.forEach((color, index) => {
             gradient.addColorStop(index / (currentGradient.colors.length - 1), color)
           })

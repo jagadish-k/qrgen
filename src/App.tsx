@@ -35,6 +35,7 @@ import { QRFormRenderer } from './components/QRFormRenderer'
 import { GradientSelector } from './components/GradientSelector'
 import { ImageUpload } from './components/ImageUpload'
 import { QRCodeGenerator } from './components/QRCodeGenerator'
+import { Footer } from './components/Footer'
 
 
 const App: React.FC = () => {
@@ -603,6 +604,9 @@ const App: React.FC = () => {
           onError={(error) => showToast(error, 'error')}
         />
       )}
+
+      {/* Footer */}
+      <Footer isDarkMode={isDarkMode} />
 
       {/* Toast notification */}
       <ToastNotification toast={toast} onClose={hideToast} />

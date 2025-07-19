@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import QRious from 'qrious';
 import { Gradient, QRCodeType } from '../types';
+import { CustomGradientCreator } from './CustomGradientCreator';
 
 interface GradientSelectorProps {
   currentGradient: Gradient | null;
@@ -72,13 +73,21 @@ const QRPreview: React.FC<{
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
-        // Create gradient
-        const gradientStyle = ctx.createLinearGradient(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
+        // Create gradient with custom angle if available
+        const angle = gradient.angle || 45 // Default 45 degrees if no angle specified
+        const radians = (angle * Math.PI) / 180
+        
+        // Calculate gradient endpoints based on angle
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
+        const radius = Math.max(canvas.width, canvas.height) / 2
+        
+        const x1 = centerX - Math.cos(radians) * radius
+        const y1 = centerY - Math.sin(radians) * radius
+        const x2 = centerX + Math.cos(radians) * radius
+        const y2 = centerY + Math.sin(radians) * radius
+        
+        const gradientStyle = ctx.createLinearGradient(x1, y1, x2, y2);
         gradient.colors.forEach((color, index) => {
           gradientStyle.addColorStop(
             index / (gradient.colors.length - 1),
@@ -208,6 +217,7 @@ export const GradientSelector: React.FC<GradientSelectorProps> = ({
   selectedQRType,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCustomCreator, setShowCustomCreator] = useState(false);
 
   const filteredGradients = useMemo(() => {
     return gradientOptions.filter((gradient) =>
@@ -225,7 +235,7 @@ export const GradientSelector: React.FC<GradientSelectorProps> = ({
     <div>
       <label className="neu-label">Gradient Themes</label>
       <div className="bg-neu-light dark:bg-neu-dark-light p-6 rounded-xl space-y-4 transition-colors duration-300">
-        {/* Search field and Random button */}
+        {/* Search field, Custom button and Random button */}
         <div className="flex gap-3 items-center">
           <input
             type="text"
@@ -233,77 +243,101 @@ export const GradientSelector: React.FC<GradientSelectorProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="neu-input text-sm flex-1"
+            disabled={showCustomCreator}
           />
+          <button
+            onClick={() => setShowCustomCreator(!showCustomCreator)}
+            className={`neu-button text-sm px-4 py-3 whitespace-nowrap ${
+              showCustomCreator ? 'ring-2 ring-blue-500' : ''
+            }`}
+          >
+            {showCustomCreator ? 'Hide Custom' : 'Custom'}
+          </button>
           <button
             onClick={onGenerateRandom}
             className="neu-button text-sm px-4 py-3 whitespace-nowrap"
+            disabled={showCustomCreator}
           >
             Random
           </button>
         </div>
 
-        <p
-          className="text-xs transition-colors duration-300"
-          style={{
-            color: isDarkMode
-              ? 'rgba(156, 163, 175, 0.8)'
-              : 'rgba(107, 114, 128, 0.8)',
-          }}
-        >
-          Showing {filteredGradients.length} of {gradientOptions.length}{' '}
-          gradients
-        </p>
+        {!showCustomCreator && (
+          <>
+            <p
+              className="text-xs transition-colors duration-300"
+              style={{
+                color: isDarkMode
+                  ? 'rgba(156, 163, 175, 0.8)'
+                  : 'rgba(107, 114, 128, 0.8)',
+              }}
+            >
+              Showing {filteredGradients.length} of {gradientOptions.length}{' '}
+              gradients
+            </p>
 
-        {/* Gradient grid */}
-        <div className="max-h-80 overflow-y-auto">
-          <div
-            className="grid gap-3 p-1"
-            style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
-            }}
-          >
-            {filteredGradients.map((gradient, index) => (
-              <button
-                key={index}
-                onClick={() => onSelectGradient(gradient)}
-                className={`relative group transition-all duration-200 ${
-                  currentGradient.name === gradient.name
-                    ? 'ring-2 ring-blue-500 scale-105'
-                    : 'hover:scale-105 hover:ring-2 hover:ring-blue-400'
-                }`}
-                style={{ width: '64px', height: '64px' }}
-                title={gradient.name}
-              >
-                <div className="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden p-1">
-                  <QRPreview
-                    gradient={gradient}
-                    qrData={sampleQRData}
-                    size={56}
-                  />
-                </div>
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  {gradient.name}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {filteredGradients.length === 0 && (
-            <div className="text-center py-8">
-              <p
-                className="transition-colors duration-300"
+            {/* Gradient grid */}
+            <div className="max-h-80 overflow-y-auto">
+              <div
+                className="grid gap-3 p-1"
                 style={{
-                  color: isDarkMode
-                    ? 'rgba(156, 163, 175, 0.8)'
-                    : 'rgba(107, 114, 128, 0.8)',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
                 }}
               >
-                No gradients found matching "{searchTerm}"
-              </p>
+                {filteredGradients.map((gradient, index) => (
+                  <button
+                    key={index}
+                    onClick={() => onSelectGradient(gradient)}
+                    className={`relative group transition-all duration-200 ${
+                      currentGradient.name === gradient.name
+                        ? 'ring-2 ring-blue-500 scale-105'
+                        : 'hover:scale-105 hover:ring-2 hover:ring-blue-400'
+                    }`}
+                    style={{ width: '64px', height: '64px' }}
+                    title={gradient.name}
+                  >
+                    <div className="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden p-1">
+                      <QRPreview
+                        gradient={gradient}
+                        qrData={sampleQRData}
+                        size={56}
+                      />
+                    </div>
+                    {/* Tooltip on hover */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                      {gradient.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {filteredGradients.length === 0 && (
+                <div className="text-center py-8">
+                  <p
+                    className="transition-colors duration-300"
+                    style={{
+                      color: isDarkMode
+                        ? 'rgba(156, 163, 175, 0.8)'
+                        : 'rgba(107, 114, 128, 0.8)',
+                    }}
+                  >
+                    No gradients found matching "{searchTerm}"
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
+
+        {/* Custom Gradient Creator - shown in place of grid when active */}
+        {showCustomCreator && (
+          <div className="mt-2">
+            <CustomGradientCreator 
+              onGradientChange={onSelectGradient}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
