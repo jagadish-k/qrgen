@@ -8,6 +8,7 @@ interface QRCodeGeneratorProps {
   embeddedImage: string | null
   extractedColors: ColorPalette | null
   currentGradient: Gradient | null
+  embedImageInQR: boolean
   onQRGenerated: (dataUrl: string) => void
   onError: (error: string) => void
 }
@@ -17,6 +18,7 @@ export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   embeddedImage,
   extractedColors,
   currentGradient,
+  embedImageInQR,
   onQRGenerated,
   onError
 }) => {
@@ -89,8 +91,8 @@ export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
         })
       }
 
-      // Add embedded image if present
-      if (embeddedImage) {
+      // Add embedded image if present and embedding is enabled
+      if (embeddedImage && embedImageInQR) {
         const ctx = canvas.getContext('2d')
         if (ctx) {
           const img = new Image()
@@ -129,7 +131,7 @@ export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
       console.error('Error generating QR code:', error)
       onError('Error generating QR code')
     }
-  }, [qrData, embeddedImage, extractedColors, currentGradient, onQRGenerated, onError])
+  }, [qrData, embeddedImage, extractedColors, currentGradient, embedImageInQR, onQRGenerated, onError])
 
   // Auto-generate when dependencies change
   React.useEffect(() => {

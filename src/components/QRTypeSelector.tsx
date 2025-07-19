@@ -38,7 +38,9 @@ export const QRTypeSelector: React.FC<QRTypeSelectorProps> = ({
                 <div className="qr-icon-embedded">
                   <IconComponent />
                 </div>
-                <h3 className="qr-title-elevated">{card.title}</h3>
+                <h3 className="qr-title-elevated">
+                  {card.title}
+                </h3>
               </div>
               {card.examples && (
                 <div className="mt-4 relative z-10">

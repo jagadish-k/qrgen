@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { FiPlus, FiDownload, FiArrowLeft, FiX, FiRefreshCw } from 'react-icons/fi'
+import { FiPlus, FiDownload, FiArrowLeft, FiX } from 'react-icons/fi'
 
 // Import types and utilities
 import { 
@@ -55,6 +55,7 @@ const App: React.FC = () => {
   const [embeddedImage, setEmbeddedImage] = useState<string | null>(null)
   const [extractedColors, setExtractedColors] = useState<ColorPalette | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [embedImageInQR, setEmbedImageInQR] = useState(true)
   
   // State for UI
   const [currentStep, setCurrentStep] = useState<AppStep>('select')
@@ -198,6 +199,19 @@ const App: React.FC = () => {
     }
   }, [validateInput, getQRData, currentStep])
 
+  // Auto-generate QR code when form data changes and is valid
+  useEffect(() => {
+    if (currentStep === 'form' && selectedQRType) {
+      const timer = setTimeout(() => {
+        if (validateInput()) {
+          generateQRCode()
+        }
+      }, 500) // Debounce by 500ms
+      
+      return () => clearTimeout(timer)
+    }
+  }, [currentStep, selectedQRType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, embeddedImage, extractedColors, currentGradient, embedImageInQR, validateInput, generateQRCode])
+
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -218,6 +232,24 @@ const App: React.FC = () => {
       reader.readAsDataURL(file)
     }
   }, [showToast])
+
+  const handleImageFromUrl = useCallback(async (url: string) => {
+    try {
+      setEmbeddedImage(url)
+      setActiveTab('image') // Switch to image tab when image is loaded
+      
+      const colors = await extractColorsFromImage(url)
+      setExtractedColors(colors)
+    } catch (error) {
+      console.error('Error extracting colors from URL:', error)
+      showToast('Image loaded but color extraction failed', 'error')
+      setEmbeddedImage(null)
+    }
+  }, [showToast])
+
+  const handleColorsChange = useCallback((colors: ColorPalette) => {
+    setExtractedColors(colors)
+  }, [])
 
   const removeImage = useCallback(() => {
     setEmbeddedImage(null)
@@ -242,6 +274,39 @@ const App: React.FC = () => {
     
   }, [qrCodeDataUrl, showToast])
 
+  const clearAllDataAndGoToSelect = useCallback(() => {
+    // Clear all form data
+    setTextInput('')
+    setUrlInput('')
+    setPhoneInput('')
+    setSmsData({ number: '', message: '' })
+    setEmailData({ email: '', subject: '', body: '' })
+    setWifiData({ ssid: '', password: '', encryption: 'WPA' })
+    setContactData({ name: '', phone: '', email: '' })
+    setUpiData({ pa: '', pn: '', cu: 'INR' })
+    setEventData({ title: '', startDate: '' })
+    setLocationData({ latitude: '', longitude: '', useDirectMapsLink: false })
+    
+    // Clear QR and image data
+    setQrCodeDataUrl(null)
+    setEmbeddedImage(null)
+    setExtractedColors(null)
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    
+    // Reset UI state
+    setSelectedQRType(null)
+    setCurrentStep('select')
+    setActiveTab('gradient')
+    setEmbedImageInQR(true)
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
 
 
   return (
@@ -260,9 +325,9 @@ const App: React.FC = () => {
         </div>
 
         {/* Main Layout Container */}
-        <div className={`flex gap-6 transition-all duration-500 ${qrCodeDataUrl ? 'lg:flex-row flex-col-reverse' : 'flex-col'}`}>
+        <div className={`flex gap-6 transition-all duration-250 ${qrCodeDataUrl ? 'lg:flex-row flex-col-reverse' : 'flex-col'}`}>
           {/* Left Column - Forms and Selection */}
-          <div className={`transition-all duration-500 ${qrCodeDataUrl ? 'lg:w-1/2 w-full' : 'w-full'}`}>
+          <div className={`transition-all duration-250 ${qrCodeDataUrl ? 'lg:w-1/2 w-full' : 'w-full'}`}>
             {/* QR Type Selection */}
             {currentStep === 'select' && (
               <QRTypeSelector
@@ -374,39 +439,19 @@ const App: React.FC = () => {
                     <ImageUpload
                       embeddedImage={embeddedImage}
                       extractedColors={extractedColors}
+                      embedImageInQR={embedImageInQR}
                       onImageUpload={handleImageUpload}
+                      onImageFromUrl={handleImageFromUrl}
+                      onColorsChange={handleColorsChange}
+                      onEmbedToggle={setEmbedImageInQR}
                       onRemoveImage={removeImage}
                       fileInputRef={fileInputRef}
+                      isDarkMode={isDarkMode}
                     />
                   </div>
                 )}
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex space-x-4 pt-4">
-                <button
-                  onClick={() => goToStep('select')}
-                  className="neu-button"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={generateQRCode}
-                  disabled={isGenerating}
-                  className="neu-button-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isGenerating ? (
-                    'Generating...'
-                  ) : qrCodeDataUrl ? (
-                    <>
-                      <FiRefreshCw className="w-4 h-4" />
-                      Regenerate QR Code
-                    </>
-                  ) : (
-                    'Generate QR Code'
-                  )}
-                </button>
-              </div>
             </div>
           </div>
             )}
@@ -414,20 +459,17 @@ const App: React.FC = () => {
 
           {/* Right Column - QR Code Display */}
           {qrCodeDataUrl && (
-            <div className="lg:w-1/2 w-full transition-all duration-500">
+            <div className="lg:w-1/2 w-full transition-all duration-250">
               <div className="neu-card lg:sticky lg:top-6">
                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
                   <h2 className="text-2xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
                     Your QR Code
                   </h2>
                   <button
-                    onClick={() => {
-                      setQrCodeDataUrl('')
-                      setCurrentStep('form')
-                    }}
+                    onClick={clearAllDataAndGoToSelect}
                     className="neu-button p-2 w-10 h-10 flex items-center justify-center rounded-full"
                     type="button"
-                    title="Clear QR Code"
+                    title="Start Over"
                   >
                     <FiX className="w-5 h-5" />
                   </button>
@@ -487,7 +529,7 @@ const App: React.FC = () => {
 
                       {/* Create New Button */}
                       <button
-                        onClick={() => goToStep('select')}
+                        onClick={clearAllDataAndGoToSelect}
                         className="w-16 h-16 rounded-xl transition-all duration-200 flex items-center justify-center group"
                         style={{
                           background: isDarkMode 
@@ -535,6 +577,7 @@ const App: React.FC = () => {
           embeddedImage={embeddedImage}
           extractedColors={extractedColors}
           currentGradient={currentGradient}
+          embedImageInQR={embedImageInQR}
           onQRGenerated={setQrCodeDataUrl}
           onError={(error) => showToast(error, 'error')}
         />
