@@ -26,7 +26,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[hash][extname]'
       }
     },
-    copyPublicDir: false,
+    copyPublicDir: true,
     assetsDir: 'assets',
     minify: false
   },

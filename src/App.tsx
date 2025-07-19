@@ -255,10 +255,10 @@ const App: React.FC = () => {
 
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-300">
+          <h1 className="text-4xl font-semibold mb-2 transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
             QR Code Generator
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">
+          <p className="transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(75, 85, 99, 0.8)'}}>
             Generate colorful QR codes with embedded images using extracted color palettes
           </p>
         </div>
@@ -269,6 +269,7 @@ const App: React.FC = () => {
             onSelectType={selectQRType}
             onShowTooltip={showTooltip}
             onHideTooltip={hideTooltip}
+            isDarkMode={isDarkMode}
           />
         )}
 
@@ -276,7 +277,7 @@ const App: React.FC = () => {
         {currentStep === 'form' && selectedQRType && (
           <div id="qr-form-section" className="mt-12 neu-card">
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
-              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">
+              <h2 className="text-3xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
                 {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
               </h2>
               <button
@@ -322,6 +323,8 @@ const App: React.FC = () => {
                   gradientOptions={gradientOptions}
                   onSelectGradient={handleGradientSelect}
                   onGenerateRandom={handleRandomGradient}
+                  isDarkMode={isDarkMode}
+                  selectedQRType={selectedQRType}
                 />
               )}
               
@@ -358,7 +361,7 @@ const App: React.FC = () => {
         {currentStep === 'result' && qrCodeDataUrl && (
           <div id="qr-result-section" className="mt-12 neu-card">
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
-              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">
+              <h2 className="text-3xl font-semibold transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
                 Your {QR_TYPE_CARDS.find(card => card.type === selectedQRType)?.title} QR Code
               </h2>
               <button

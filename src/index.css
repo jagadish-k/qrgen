@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Local Nunito Sans Font */
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/NunitoSans-VariableFont_YTLC,opsz,wdth,wght.ttf') format('truetype-variations');
+  font-weight: 200 1000;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/NunitoSans-Italic-VariableFont_YTLC,opsz,wdth,wght.ttf') format('truetype-variations');
+  font-weight: 200 1000;
+  font-stretch: 75% 125%;
+  font-style: italic;
+  font-display: swap;
+}
+
 @layer base {
   * {
     font-family: 'Nunito Sans', system-ui, -apple-system, sans-serif;
@@ -35,7 +54,12 @@
   
   /* Neumorphism buttons */
   .neu-button {
-    @apply bg-neu-base dark:bg-neu-dark-base text-gray-700 dark:text-gray-200 font-medium py-3 px-6 rounded-xl shadow-neu-flat dark:shadow-neu-dark-flat transition-all duration-200 hover:shadow-neu-hover dark:hover:shadow-neu-dark-hover active:bg-neu-dark dark:active:bg-neu-dark-dark;
+    @apply bg-neu-base dark:bg-neu-dark-base font-medium py-3 px-6 rounded-xl shadow-neu-flat dark:shadow-neu-dark-flat transition-all duration-200 hover:shadow-neu-hover dark:hover:shadow-neu-dark-hover active:bg-neu-dark dark:active:bg-neu-dark-dark;
+    color: rgba(55, 65, 81, 0.8);
+  }
+  
+  .dark .neu-button {
+    color: rgba(229, 231, 235, 0.8);
   }
   
   .neu-button-primary {
@@ -56,7 +80,12 @@
   }
   
   .neu-label {
-    @apply block text-sm font-medium text-gray-600 dark:text-gray-300 mb-3 transition-colors duration-300;
+    @apply block text-sm font-medium mb-3 transition-colors duration-300;
+    color: rgba(75, 85, 99, 0.8);
+  }
+  
+  .dark .neu-label {
+    color: rgba(209, 213, 219, 0.8);
   }
   
   /* Dark mode toggle button */
@@ -102,34 +131,37 @@
   
   /* Flat icon container with debossed SVG effect */
   .qr-icon-embedded {
-    @apply text-4xl mb-6 text-gray-600 dark:text-gray-300 transition-all duration-300 mx-auto;
+    @apply text-4xl mb-6 transition-all duration-300 mx-auto;
     width: 80px;
     height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: rgba(75, 85, 99, 0.7);
     filter: drop-shadow(1px 1px 1px rgba(255,255,255,0.8)) drop-shadow(-1px -1px 1px rgba(0,0,0,0.2));
   }
   
   .dark .qr-icon-embedded {
+    color: rgba(209, 213, 219, 0.7);
     filter: drop-shadow(1px 1px 1px rgba(255,255,255,0.1)) drop-shadow(-1px -1px 1px rgba(0,0,0,0.6));
   }
   
   /* Debossed text style - pressed into the tile */
   .qr-title-elevated {
-    @apply text-xl font-heavy text-center text-gray-700 dark:text-gray-300 transition-all duration-300 mt-4;
-    font-weight: 900;
+    @apply text-xl font-semibold text-center transition-all duration-300 mt-4;
+    font-weight: 600;
+    color: rgba(55, 65, 81, 0.75);
     text-shadow: 
-      1px 1px 2px rgba(255,255,255,0.8),
-      -1px -1px 1px rgba(0,0,0,0.2);
-    letter-spacing: 0.5px;
+      1px 1px 2px rgba(255,255,255,0.9),
+      -1px -1px 1px rgba(0,0,0,0.3);
+    letter-spacing: 0.25px;
   }
   
   .dark .qr-title-elevated {
-    @apply text-gray-300;
+    color: rgba(209, 213, 219, 0.75);
     text-shadow: 
-      1px 1px 2px rgba(255,255,255,0.1),
-      -1px -1px 1px rgba(0,0,0,0.6);
+      1px 1px 2px rgba(255,255,255,0.15),
+      -1px -1px 1px rgba(0,0,0,0.7);
   }
   
   /* Individual card hover effects with colored glows */
