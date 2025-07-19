@@ -1,6 +1,6 @@
 import React from 'react'
-import { QRCodeType, WiFiData, ContactData, UPIData, EventData, LocationData } from '../types'
-import { TextForm, URLForm, PhoneForm, WiFiForm, ContactForm } from './forms'
+import { QRCodeType, WiFiData, ContactData, UPIData, EventData, LocationData, SocialMediaData } from '../types'
+import { TextForm, URLForm, PhoneForm, WiFiForm, ContactForm, SocialMediaForm } from './forms'
 
 interface QRFormRendererProps {
   qrType: QRCodeType
@@ -14,6 +14,7 @@ interface QRFormRendererProps {
   upiData: UPIData
   eventData: EventData
   locationData: LocationData
+  socialMediaData: SocialMediaData
   onTextChange: (value: string) => void
   onUrlChange: (value: string) => void
   onPhoneChange: (value: string) => void
@@ -24,6 +25,7 @@ interface QRFormRendererProps {
   onUpiDataChange: (data: UPIData) => void
   onEventDataChange: (data: EventData) => void
   onLocationDataChange: (data: LocationData) => void
+  onSocialMediaDataChange: (data: SocialMediaData) => void
   onMapsUrlInput: (url: string) => Promise<void>
 }
 
@@ -39,6 +41,7 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
   upiData,
   eventData,
   locationData,
+  socialMediaData,
   onTextChange,
   onUrlChange,
   onPhoneChange,
@@ -49,6 +52,7 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
   onUpiDataChange,
   onEventDataChange,
   onLocationDataChange,
+  onSocialMediaDataChange,
   onMapsUrlInput
 }) => {
   switch (qrType) {
@@ -241,6 +245,11 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
           </div>
         </div>
       )
+
+    case 'linkedin':
+    case 'instagram':
+    case 'snapchat':
+      return <SocialMediaForm data={socialMediaData} onChange={onSocialMediaDataChange} />
 
     // Add other form types as needed
     default:

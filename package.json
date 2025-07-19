@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "npm run clean && npm run create-icons && vite build",
+    "build": "npm run clean && vite build",
     "clean": "rm -rf build",
-    "create-icons": "node scripts/create-icons.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
@@ -36,7 +35,6 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
-    "canvas": "^2.11.2",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.32.0",
     "eslint-plugin-react-hooks": "^4.6.0",

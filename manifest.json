@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "QR Code Generator",
+  "name": "QR Gen",
   "version": "1.0.0",
-  "description": "Generate QR codes with embedded images for text, URLs, Wi-Fi networks, and contact cards",
+  "description": "Beautiful QR codes with style",
   "permissions": [
     "tabs"
   ],
   "action": {
-    "default_title": "QR Code Generator"
+    "default_title": "QR Gen"
   },
   "background": {
     "service_worker": "background.js"

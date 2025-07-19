@@ -9,6 +9,7 @@ import {
   UPIData, 
   EventData, 
   LocationData,
+  SocialMediaData,
   ColorPalette,
   Gradient,
   AppStep
@@ -49,6 +50,7 @@ const App: React.FC = () => {
   const [upiData, setUpiData] = useState<UPIData>({ pa: '', pn: '', cu: 'INR' })
   const [eventData, setEventData] = useState<EventData>({ title: '', startDate: '' })
   const [locationData, setLocationData] = useState<LocationData>({ latitude: '', longitude: '', useDirectMapsLink: false })
+  const [socialMediaData, setSocialMediaData] = useState<SocialMediaData>({ url: '', platform: 'linkedin' })
   
   // State for QR generation
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
@@ -115,6 +117,16 @@ const App: React.FC = () => {
     setQrType(type)
     setCurrentStep('form')
     setQrCodeDataUrl(null)
+    
+    // Set the correct platform for social media types and reset data
+    if (type === 'linkedin' || type === 'instagram' || type === 'snapchat') {
+      setSocialMediaData({ 
+        url: '', 
+        platform: type,
+        selectedIcon: undefined // Will be auto-selected by the form
+      })
+    }
+    
     setTimeout(() => {
       const formElement = document.getElementById('qr-form-section')
       if (formElement) {
@@ -159,9 +171,10 @@ const App: React.FC = () => {
       contactData,
       upiData,
       eventData,
-      locationData
+      locationData,
+      socialMediaData
     })
-  }, [qrType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData])
+  }, [qrType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, socialMediaData])
 
   // Validate input using utility function
   const validateInput = useCallback((): boolean => {
@@ -176,7 +189,8 @@ const App: React.FC = () => {
       contactData,
       upiData,
       eventData,
-      locationData
+      locationData,
+      socialMediaData
     })
     
     if (!validation.isValid && validation.error) {
@@ -184,7 +198,7 @@ const App: React.FC = () => {
     }
     
     return validation.isValid
-  }, [qrType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, showToast])
+  }, [qrType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, socialMediaData, showToast])
 
   // Generate QR code
   const generateQRCode = useCallback(async () => {
@@ -210,7 +224,7 @@ const App: React.FC = () => {
       
       return () => clearTimeout(timer)
     }
-  }, [currentStep, selectedQRType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, embeddedImage, extractedColors, currentGradient, embedImageInQR, validateInput, generateQRCode])
+  }, [currentStep, selectedQRType, textInput, urlInput, phoneInput, smsData, emailData, wifiData, contactData, upiData, eventData, locationData, socialMediaData, embeddedImage, extractedColors, currentGradient, embedImageInQR, validateInput, generateQRCode])
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -286,6 +300,7 @@ const App: React.FC = () => {
     setUpiData({ pa: '', pn: '', cu: 'INR' })
     setEventData({ title: '', startDate: '' })
     setLocationData({ latitude: '', longitude: '', useDirectMapsLink: false })
+    setSocialMediaData({ url: '', platform: 'linkedin', selectedIcon: undefined })
     
     // Clear QR and image data
     setQrCodeDataUrl(null)
@@ -310,18 +325,20 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen p-6 relative">
+    <div className="min-h-screen p-4 relative">
       {/* Dark Mode Toggle */}
       <DarkModeToggle isDarkMode={isDarkMode} onToggle={toggleDarkMode} />
 
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-semibold mb-2 transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
-            QR Code Generator
-          </h1>
-          <p className="transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(75, 85, 99, 0.8)'}}>
-            Generate colorful QR codes with embedded images using extracted color palettes
-          </p>
+      <div className="max-w-[95vw] mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-left">
+            <h1 className="text-4xl font-semibold mb-1 transition-colors duration-300" style={{color: isDarkMode ? 'rgba(243, 244, 246, 0.85)' : 'rgba(31, 41, 55, 0.85)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
+              QR Gen
+            </h1>
+            <p className="text-sm transition-colors duration-300" style={{color: isDarkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(75, 85, 99, 0.8)'}}>
+              Beautiful QR codes with style
+            </p>
+          </div>
         </div>
 
         {/* Main Layout Container */}
@@ -368,6 +385,7 @@ const App: React.FC = () => {
                 upiData={upiData}
                 eventData={eventData}
                 locationData={locationData}
+                socialMediaData={socialMediaData}
                 onTextChange={setTextInput}
                 onUrlChange={setUrlInput}
                 onPhoneChange={setPhoneInput}
@@ -378,6 +396,7 @@ const App: React.FC = () => {
                 onUpiDataChange={setUpiData}
                 onEventDataChange={setEventData}
                 onLocationDataChange={setLocationData}
+                onSocialMediaDataChange={setSocialMediaData}
                 onMapsUrlInput={handleMapsUrlInput}
               />
               
@@ -574,10 +593,12 @@ const App: React.FC = () => {
       {(currentStep === 'form' || currentStep === 'result') && (
         <QRCodeGenerator
           qrData={getQRData()}
+          qrType={qrType}
           embeddedImage={embeddedImage}
           extractedColors={extractedColors}
           currentGradient={currentGradient}
           embedImageInQR={embedImageInQR}
+          socialMediaData={socialMediaData}
           onQRGenerated={setQrCodeDataUrl}
           onError={(error) => showToast(error, 'error')}
         />

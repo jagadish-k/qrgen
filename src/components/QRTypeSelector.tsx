@@ -17,9 +17,6 @@ export const QRTypeSelector: React.FC<QRTypeSelectorProps> = ({
 }) => {
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-center transition-colors duration-300" style={{color: isDarkMode ? 'rgba(229, 231, 235, 0.8)' : 'rgba(55, 65, 81, 0.8)', textShadow: isDarkMode ? '1px 1px 2px rgba(255,255,255,0.1), -1px -1px 1px rgba(0,0,0,0.6)' : '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 1px rgba(0,0,0,0.2)'}}>
-        Choose QR Code Type
-      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {QR_TYPE_CARDS.map((card) => {
           const IconComponent = card.icon

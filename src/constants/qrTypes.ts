@@ -12,6 +12,11 @@ import {
   FiUser,
   FiCreditCard,
 } from 'react-icons/fi';
+import { 
+  FaLinkedin, 
+  FaInstagram, 
+  FaSnapchat 
+} from 'react-icons/fa';
 import { QRTypeCard } from '../types';
 
 export const QR_TYPE_CARDS: QRTypeCard[] = [
@@ -122,6 +127,33 @@ export const QR_TYPE_CARDS: QRTypeCard[] = [
     hoverColor: 'hover:border-gray-400',
     glowColor: 'hover:shadow-[0_0_20px_rgba(107,114,128,0.3)]',
     examples: ['Video meetings', 'Family calls'],
+  },
+  {
+    type: 'linkedin',
+    title: 'LinkedIn',
+    description: 'LinkedIn profile with custom logo',
+    icon: FaLinkedin,
+    hoverColor: 'hover:border-blue-600',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]',
+    examples: ['Professional profiles', 'Business networking'],
+  },
+  {
+    type: 'instagram',
+    title: 'Instagram',
+    description: 'Official Instagram profile QR (compatible with IG app)',
+    icon: FaInstagram,
+    hoverColor: 'hover:border-pink-500',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]',
+    examples: ['@myusername', 'instagram.com/mypage'],
+  },
+  {
+    type: 'snapchat',
+    title: 'Snapchat',
+    description: 'Snapchat profile with custom logo',
+    icon: FaSnapchat,
+    hoverColor: 'hover:border-yellow-400',
+    glowColor: 'hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]',
+    examples: ['Snap profiles', 'Social sharing'],
   },
 ];
 

@@ -4,7 +4,8 @@ import {
   ContactData, 
   UPIData, 
   EventData, 
-  LocationData 
+  LocationData,
+  SocialMediaData 
 } from '../types'
 
 interface QRDataParams {
@@ -19,6 +20,7 @@ interface QRDataParams {
   upiData: UPIData
   eventData: EventData
   locationData: LocationData
+  socialMediaData: SocialMediaData
 }
 
 export const generateQRData = (params: QRDataParams): string => {
@@ -33,7 +35,8 @@ export const generateQRData = (params: QRDataParams): string => {
     contactData,
     upiData,
     eventData,
-    locationData
+    locationData,
+    socialMediaData
   } = params
 
   switch (qrType) {
@@ -162,6 +165,11 @@ export const generateQRData = (params: QRDataParams): string => {
       if (upiData.gstIn) upiParams.append('gstIn', upiData.gstIn)
       if (upiData.mam) upiParams.append('mam', upiData.mam)
       return `upi://pay?${upiParams.toString()}`
+
+    case 'linkedin':
+    case 'instagram':
+    case 'snapchat':
+      return socialMediaData.url
 
     default:
       return ''

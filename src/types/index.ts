@@ -68,7 +68,13 @@ export interface LocationData {
   useDirectMapsLink?: boolean
 }
 
-export type QRCodeType = 'text' | 'url' | 'phone' | 'sms' | 'email' | 'facetime' | 'whatsapp' | 'location' | 'wifi' | 'event' | 'vcard' | 'upi'
+export interface SocialMediaData {
+  url: string
+  platform: 'linkedin' | 'instagram' | 'snapchat'
+  selectedIcon?: IconType
+}
+
+export type QRCodeType = 'text' | 'url' | 'phone' | 'sms' | 'email' | 'facetime' | 'whatsapp' | 'location' | 'wifi' | 'event' | 'vcard' | 'upi' | 'linkedin' | 'instagram' | 'snapchat'
 
 export interface QRTypeCard {
   type: QRCodeType
