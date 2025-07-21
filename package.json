@@ -4,8 +4,8 @@
   "description": "Chrome extension for generating QR codes with embedded images",
   "main": "index.js",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "npm run clean && vite build",
+    "dev": "vite build --watch --config config/vite.config.ts",
+    "build": "npm run clean && vite build --config config/vite.config.ts",
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",

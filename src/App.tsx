@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { FiPlus, FiDownload, FiArrowLeft, FiX } from 'react-icons/fi'
+import { FiPlus, FiDownload, FiX } from 'react-icons/fi'
 
 // Import types and utilities
 import { 
@@ -57,7 +57,7 @@ const App: React.FC = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
   const [embeddedImage, setEmbeddedImage] = useState<string | null>(null)
   const [extractedColors, setExtractedColors] = useState<ColorPalette | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [, setIsGenerating] = useState(false)
   const [embedImageInQR, setEmbedImageInQR] = useState(true)
   
   // State for UI
@@ -102,8 +102,8 @@ const App: React.FC = () => {
 
   // Handle gradient selection with toast feedback
   const handleGradientSelect = useCallback((gradient: Gradient) => {
-    const selected = selectGradient(gradient)
-  }, [selectGradient, showToast])
+    selectGradient(gradient)
+  }, [selectGradient])
 
   const handleRandomGradient = useCallback(() => {
     const randomGradient = generateRandomGradient()
@@ -206,7 +206,6 @@ const App: React.FC = () => {
     if (!validateInput()) return
     
     setIsGenerating(true)
-    const qrData = getQRData()
     
     // Stay in form step for 2-column layout, but set result step internally for generator
     if (currentStep === 'form') {

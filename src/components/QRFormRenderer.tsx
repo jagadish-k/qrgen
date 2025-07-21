@@ -38,8 +38,6 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
   emailData,
   wifiData,
   contactData,
-  upiData,
-  eventData,
   locationData,
   socialMediaData,
   onTextChange,
@@ -49,8 +47,6 @@ export const QRFormRenderer: React.FC<QRFormRendererProps> = ({
   onEmailDataChange,
   onWifiDataChange,
   onContactDataChange,
-  onUpiDataChange,
-  onEventDataChange,
   onLocationDataChange,
   onSocialMediaDataChange,
   onMapsUrlInput

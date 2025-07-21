@@ -14,15 +14,9 @@ const PLATFORM_ICONS: Record<SocialMediaData['platform'], IconType[]> = {
   snapchat: [FaSnapchat]
 }
 
-const PLATFORM_PLACEHOLDERS: Record<SocialMediaData['platform'], string> = {
-  linkedin: 'https://www.linkedin.com/in/yourprofile',
-  instagram: 'https://www.instagram.com/yourusername',
-  snapchat: 'https://www.snapchat.com/add/yourusername'
-}
 
 export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ data, onChange }) => {
   const availableIcons = PLATFORM_ICONS[data.platform]
-  const placeholder = PLATFORM_PLACEHOLDERS[data.platform]
 
   // Auto-select the first available icon if none is selected or platform changed
   React.useEffect(() => {
