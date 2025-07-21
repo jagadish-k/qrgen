@@ -27,7 +27,13 @@ export default defineConfig({
         }
 
         // Copy icons from src/icons to build/icons
-        const iconFiles = ['icon16.png', 'icon48.png', 'icon128.png'];
+        const iconFiles = [
+          'icon16.png',
+          'icon32.png',
+          'icon48.png',
+          'icon96.png',
+          'icon128.png',
+        ];
         iconFiles.forEach((iconFile) => {
           const srcPath = `src/icons/${iconFile}`;
           const destPath = `build/icons/${iconFile}`;
@@ -48,7 +54,7 @@ export default defineConfig({
 
         const fontFiles = [
           'NunitoSans-VariableFont_YTLC,opsz,wdth,wght.ttf',
-          'NunitoSans-Italic-VariableFont_YTLC,opsz,wdth,wght.ttf'
+          'NunitoSans-Italic-VariableFont_YTLC,opsz,wdth,wght.ttf',
         ];
         fontFiles.forEach((fontFile) => {
           const srcPath = `src/assets/fonts/${fontFile}`;
