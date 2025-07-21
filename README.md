@@ -1,11 +1,25 @@
-# QR Code Generator Chrome Extension
+# QR Gen - Professional QR Code Generator
 
-A powerful Chrome extension for generating beautiful, colorful QR codes with embedded images and intelligent color extraction. Features a modern neumorphism design with dark mode support.
+⚡ **Create beautiful QR codes instantly** - A powerful Chrome extension for generating professional QR codes with embedded images, smart color extraction, and modern neumorphic design.
 
 ![QR Code Generator](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-4285F4?style=for-the-badge&logo=googlechrome)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+## 📱 Screenshots
+
+### Light Mode Interface
+![QR Gen Light Mode - Complete QR Code Type Selection](marketing-images/1.png)
+*Complete QR code type selection interface with modern neumorphic design*
+
+### Dark Mode Interface  
+![QR Gen Dark Mode - Full Feature Overview](marketing-images/2.png)
+*Dark mode showing all supported QR code types: Plain Text, URL, Phone, SMS, Email, WhatsApp, Location, WiFi, Calendar Events, Contact Cards, UPI Payments, and FaceTime*
+
+### Advanced Location QR Code Generation
+![QR Gen Location QR Code with Gradient Themes](marketing-images/3.png)
+*Advanced location QR code generation with Google Maps integration, custom gradients, and real-time preview*
 
 ## ✨ Features
 
