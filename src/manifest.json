@@ -16,6 +16,5 @@
   },
   "manifest_version": 3,
   "name": "QR Gen",
-  "permissions": ["tabs"],
   "version": "1.0.0"
 }
