@@ -44,7 +44,6 @@ None. All features work without requesting any permissions.
 
 QR Gen may connect to external services only for:
 
-- **UI Gradients API (uigradients.com)**: To fetch predefined gradient options for styling
 - **Google Maps Shortened URLs**: To resolve goo.gl and maps.app.goo.gl shortened URLs when parsing location data
 
 These connections are made only when you actively use these specific features and do not transmit personal information.
